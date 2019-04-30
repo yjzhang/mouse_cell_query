@@ -22,7 +22,7 @@ def gene_overlap_indices(input_gene_names, db_gene_names):
     data_gene_ids = []
     for index, gene in enumerate(input_gene_names):
         if gene in db_genes_set:
-            db_gene_ids.append(i)
+            db_gene_ids.append(index)
             data_gene_ids.append(data_gene_ids_map[gene])
     db_gene_ids = np.array(db_gene_ids)
     data_gene_ids = np.array(data_gene_ids)
@@ -43,10 +43,10 @@ def spearman_search(input_data, db_data, db_gene_ids):
     """
     results = []
     for cell_type_name, data in db_data.items():
-        corr = scipy.stats.spearmanr(input_data, data[db_gene_ids])
+        corr = scipy.stats.spearmanr(input_data, data[db_gene_ids])[0]
         results.append((cell_type_name, corr))
     # sort by decreasing correlation
-    results.sort(lambda x: x[1], reverse=True)
+    results.sort(key=lambda x: x[1], reverse=True)
     return results
 
 def search(input_data, input_gene_names, db_data, db_gene_names, method='spearman'):
