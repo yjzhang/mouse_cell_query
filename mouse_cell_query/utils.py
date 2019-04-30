@@ -13,6 +13,8 @@ def gene_overlap_indices(input_gene_names, db_gene_names):
         db_gene_names: list or array of strings
     """
     # match genes between the db and the input data
+    db_gene_names = [x.upper() for x in db_gene_names]
+    input_gene_names = [x.upper() for x in input_gene_names]
     db_genes_set = set(db_gene_names)
     # map of gene names to IDs
     data_gene_ids_map = {}
@@ -49,6 +51,20 @@ def spearman_search(input_data, db_data, db_gene_ids):
     results.sort(key=lambda x: x[1], reverse=True)
     return results
 
+def poisson_search(input_data, db_data, db_gene_ids):
+    """
+    Search using Poisson distance
+    """
+    from uncurl_analysis import bulk_data
+    results = []
+    for cell_type_name, data in db_data.items():
+        data_subset = data[db_gene_ids]
+        dist = bulk_data.log_prob_poisson(data_subset, input_data)
+        results.append((cell_type_name, dist))
+    # sort by decreasing correlation
+    results.sort(key=lambda x: x[1], reverse=True)
+    return results
+
 def search(input_data, input_gene_names, db_data, db_gene_names, method='spearman'):
     """
     Finds the most similar cell types by the given method.
@@ -67,4 +83,6 @@ def search(input_data, input_gene_names, db_data, db_gene_names, method='spearma
     input_data = input_data[data_gene_ids]
     if method == 'spearman':
         results = spearman_search(input_data, db_data, db_gene_ids)
+    elif method == 'poisson':
+        results = poisson_search(input_data, db_data, db_gene_ids)
     return results
