@@ -44,8 +44,24 @@ def spearman_search(input_data, db_data, db_gene_ids):
         list of (cell type, corr) tuples, sorted by decreasing correlation
     """
     results = []
+    input_data = input_data[db_gene_ids]
     for cell_type_name, data in db_data.items():
         corr = scipy.stats.spearmanr(input_data, data[db_gene_ids])[0]
+        results.append((cell_type_name, corr))
+    # sort by decreasing correlation
+    results.sort(key=lambda x: x[1], reverse=True)
+    return results
+
+def spearman_nonzero_search(input_data, db_data, db_gene_ids):
+    """
+    only use nonzero elements in input_data
+    """
+    results = []
+    input_data = input_data[db_gene_ids]
+    nonzeros = np.nonzero(input_data)[0]
+    input_data = input_data[nonzeros]
+    for cell_type_name, data in db_data.items():
+        corr = scipy.stats.spearmanr(input_data, data[db_gene_ids][nonzeros])[0]
         results.append((cell_type_name, corr))
     # sort by decreasing correlation
     results.sort(key=lambda x: x[1], reverse=True)
@@ -56,14 +72,36 @@ def poisson_search(input_data, db_data, db_gene_ids):
     Search using Poisson distance
     """
     from uncurl_analysis import bulk_data
+    input_data = input_data[db_gene_ids]
     results = []
     for cell_type_name, data in db_data.items():
+        data = data/data.sum()
         data_subset = data[db_gene_ids]
         dist = bulk_data.log_prob_poisson(data_subset, input_data)
         results.append((cell_type_name, dist))
     # sort by decreasing correlation
     results.sort(key=lambda x: x[1], reverse=True)
     return results
+
+def cosine_search(input_data, db_data, db_gene_ids):
+    """
+    Search using cosine similarity
+    """
+    from uncurl_analysis import bulk_data
+    input_data = input_data[db_gene_ids]
+    results = []
+    for cell_type_name, data in db_data.items():
+        data_subset = data[db_gene_ids]
+        dist = bulk_data.cosine(data_subset, input_data)[0][0]
+        results.append((cell_type_name, dist))
+    # sort by decreasing correlation
+    results.sort(key=lambda x: x[1], reverse=True)
+    return results
+
+
+def hamming_search(input_data, db_data, db_gene_ids):
+    """
+    """
 
 def search(input_data, input_gene_names, db_data, db_gene_names, method='spearman'):
     """
@@ -80,9 +118,12 @@ def search(input_data, input_gene_names, db_data, db_gene_names, method='spearma
         list of (cell type, similarity metric) sorted by decreasing similarity
     """
     data_gene_ids, db_gene_ids = gene_overlap_indices(input_gene_names, db_gene_names)
-    input_data = input_data[data_gene_ids]
     if method == 'spearman':
         results = spearman_search(input_data, db_data, db_gene_ids)
     elif method == 'poisson':
         results = poisson_search(input_data, db_data, db_gene_ids)
+    elif method == 'spearman_nonzero':
+        results = spearman_nonzero_search(input_data, db_data, db_gene_ids)
+    elif method == 'cosine':
+        results = cosine_search(input_data, db_data, db_gene_ids)
     return results

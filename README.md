@@ -7,7 +7,7 @@ TODO:
 
 ## Datasets
 
-### Tabular Muris
+### Tabula Muris
 
 <https://figshare.com/projects/Tabula_Muris_Transcriptomic_characterization_of_20_organs_and_tissues_from_Mus_musculus_at_single_cell_resolution/27733>
 
@@ -25,3 +25,12 @@ There are x cells and y cell types.
 
 This dataset contains some batch-removed cells.
 
+## Querying
+
+the main problem with querying is that the input data and the database might have different gene sets. right now we just subset the genes present in both the db and query. Is there a way to do this better?
+
+ideas:
+- hamming distance with binarized data from input vs db?
+- rank correlation using only nonzero elements in query?
+- somehow combining hamming distance with rank correlation? average?
+- extracting top genes from each cell type in tabula muris
