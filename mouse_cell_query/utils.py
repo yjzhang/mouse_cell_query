@@ -17,20 +17,20 @@ def gene_overlap_indices(input_gene_names, db_gene_names):
     input_gene_names = [x.upper() for x in input_gene_names]
     db_genes_set = set(db_gene_names)
     # map of gene names to IDs
-    data_gene_ids_map = {}
-    for i, gene in enumerate(input_gene_names):
-        data_gene_ids_map[gene] = i
+    db_gene_ids_map = {}
+    for i, gene in enumerate(db_gene_names):
+        db_gene_ids_map[gene] = i
     db_gene_ids = []
     data_gene_ids = []
     for index, gene in enumerate(input_gene_names):
         if gene in db_genes_set:
-            db_gene_ids.append(index)
-            data_gene_ids.append(data_gene_ids_map[gene])
+            data_gene_ids.append(index)
+            db_gene_ids.append(db_gene_ids_map[gene])
     db_gene_ids = np.array(db_gene_ids)
     data_gene_ids = np.array(data_gene_ids)
     return data_gene_ids, db_gene_ids
 
-def spearman_search(input_data, db_data, db_gene_ids):
+def spearman_search(input_data, db_data, data_gene_ids, db_gene_ids):
     """
     Search using Spearman correlation. assumes that the input data has already been aligned
     by gene name.
@@ -44,7 +44,7 @@ def spearman_search(input_data, db_data, db_gene_ids):
         list of (cell type, corr) tuples, sorted by decreasing correlation
     """
     results = []
-    input_data = input_data[db_gene_ids]
+    input_data = input_data[data_gene_ids]
     for cell_type_name, data in db_data.items():
         corr = scipy.stats.spearmanr(input_data, data[db_gene_ids])[0]
         results.append((cell_type_name, corr))
@@ -52,12 +52,12 @@ def spearman_search(input_data, db_data, db_gene_ids):
     results.sort(key=lambda x: x[1], reverse=True)
     return results
 
-def spearman_nonzero_search(input_data, db_data, db_gene_ids):
+def spearman_nonzero_search(input_data, db_data, data_gene_ids, db_gene_ids):
     """
     only use nonzero elements in input_data
     """
     results = []
-    input_data = input_data[db_gene_ids]
+    input_data = input_data[data_gene_ids]
     nonzeros = np.nonzero(input_data)[0]
     input_data = input_data[nonzeros]
     for cell_type_name, data in db_data.items():
@@ -67,12 +67,12 @@ def spearman_nonzero_search(input_data, db_data, db_gene_ids):
     results.sort(key=lambda x: x[1], reverse=True)
     return results
 
-def poisson_search(input_data, db_data, db_gene_ids):
+def poisson_search(input_data, db_data, data_gene_ids, db_gene_ids):
     """
     Search using Poisson distance
     """
     from uncurl_analysis import bulk_data
-    input_data = input_data[db_gene_ids]
+    input_data = input_data[data_gene_ids]
     results = []
     for cell_type_name, data in db_data.items():
         data = data/data.sum()
@@ -83,25 +83,38 @@ def poisson_search(input_data, db_data, db_gene_ids):
     results.sort(key=lambda x: x[1], reverse=True)
     return results
 
-def cosine_search(input_data, db_data, db_gene_ids):
+def cosine_search(input_data, db_data, data_gene_ids, db_gene_ids):
     """
     Search using cosine similarity
     """
     from uncurl_analysis import bulk_data
-    input_data = input_data[db_gene_ids]
+    input_data = input_data[data_gene_ids]
     results = []
     for cell_type_name, data in db_data.items():
         data_subset = data[db_gene_ids]
         dist = bulk_data.cosine(data_subset, input_data)[0][0]
         results.append((cell_type_name, dist))
-    # sort by decreasing correlation
+    # sort by decreasing cosine similarity
     results.sort(key=lambda x: x[1], reverse=True)
     return results
 
 
-def hamming_search(input_data, db_data, db_gene_ids):
+def hamming_search(input_data, db_data, data_gene_ids, db_gene_ids):
     """
+    Search using Hamming distance on binarized data
     """
+    import scipy
+    input_data = input_data[data_gene_ids]
+    input_data = (input_data != 0)
+    results = []
+    for cell_type_name, data in db_data.items():
+        data_subset = data[db_gene_ids]
+        data_subset = (data_subset != 0)
+        dist = scipy.spatial.distance.hamming(input_data, data_subset)
+        results.append((cell_type_name, dist))
+    # sort by increasing distance
+    results.sort(key=lambda x: x[1], reverse=False)
+    return results
 
 def search(input_data, input_gene_names, db_data, db_gene_names, method='spearman'):
     """
@@ -119,11 +132,14 @@ def search(input_data, input_gene_names, db_data, db_gene_names, method='spearma
     """
     data_gene_ids, db_gene_ids = gene_overlap_indices(input_gene_names, db_gene_names)
     if method == 'spearman':
-        results = spearman_search(input_data, db_data, db_gene_ids)
+        f = spearman_search
     elif method == 'poisson':
-        results = poisson_search(input_data, db_data, db_gene_ids)
+        f = poisson_search
     elif method == 'spearman_nonzero':
-        results = spearman_nonzero_search(input_data, db_data, db_gene_ids)
+        f = spearman_nonzero_search
     elif method == 'cosine':
-        results = cosine_search(input_data, db_data, db_gene_ids)
+        f = cosine_search
+    elif method == 'hamming':
+        f = hamming_search
+    results = f(input_data, db_data, data_gene_ids, db_gene_ids)
     return results
