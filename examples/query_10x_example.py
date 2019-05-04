@@ -38,7 +38,7 @@ true_labels_cell_ontology = {
 
 # TODO: run a systematic experiment
 import matplotlib.pyplot as plt
-plt.figure(figsize=(12, 8))
+plt.figure()
 methods = ['spearman', 'spearman_nonzero', 'cosine', 'poisson', 'random']
 ticks = ['x', 'o', '*', '+', 's']
 for method, tick in zip(methods, ticks):
@@ -58,10 +58,10 @@ for method, tick in zip(methods, ticks):
                 break
         result_ranks.append(rank)
     result_ranks = np.array(result_ranks)
-    accuracies = np.zeros(20)
-    for i in range(20):
-        accuracies[i] = float(sum(result_ranks < i))/len(result_ranks)
-    plt.plot(range(20), accuracies, '--' + tick, label=method)
+    accuracies = np.zeros(21)
+    for i in range(21):
+        accuracies[i] = float(sum(result_ranks <= i))/len(result_ranks)
+    plt.plot(range(21), accuracies, '--' + tick, label=method)
 
 plt.grid()
 plt.title('Accuracy vs rank on 10x_400')
@@ -69,7 +69,7 @@ plt.xlabel('rank')
 plt.ylabel('accuracy')
 plt.xticks(range(0, 21, 2))
 plt.legend()
-plt.savefig('query_accuracy_10x_400.png')
+plt.savefig('query_accuracy_10x_400.png', dpi=200)
 
 
 # try a different dataset... Zeisel dataset?
