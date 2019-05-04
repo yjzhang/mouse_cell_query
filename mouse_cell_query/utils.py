@@ -116,6 +116,15 @@ def hamming_search(input_data, db_data, data_gene_ids, db_gene_ids):
     results.sort(key=lambda x: x[1], reverse=False)
     return results
 
+def random_result(input_data, db_data, data_gene_ids, db_gene_ids):
+    """
+    random result, just for testing purposes
+    """
+    import random
+    cell_types = db_data.keys()
+    random.shuffle(cell_types)
+    return [(c, 0.0) for c in cell_types]
+
 def search(input_data, input_gene_names, db_data, db_gene_names, method='spearman'):
     """
     Finds the most similar cell types by the given method.
@@ -141,5 +150,7 @@ def search(input_data, input_gene_names, db_data, db_gene_names, method='spearma
         f = cosine_search
     elif method == 'hamming':
         f = hamming_search
+    elif method == 'random':
+        f = random_result
     results = f(input_data, db_data, data_gene_ids, db_gene_ids)
     return results
