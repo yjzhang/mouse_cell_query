@@ -3,37 +3,31 @@ import scipy.io
 import scipy.sparse
 import mouse_cell_query
 
-path = '/home/yjzhang/Grad_School/single_cell/uncurl_test_datasets/10x_pure_pooled/'
+path = '/home/yjzhang/Grad_School/single_cell/uncurl_test_datasets/zeisel/'
 
-data = scipy.io.mmread(path + 'data_400_cells.mtx')
-data = scipy.sparse.csc_matrix(data)
-genes = np.loadtxt(path + 'gene_names_400.tsv', dtype=str)
-labels = np.loadtxt(path + 'labs_400_cells.txt').astype(int)
-true_labels = {
-        0:   'CD19+ b cells',
-        1:   'CD14+ monocytes',
-        2:   'CD34+',
-        3:   'CD4+ t helper',
-        4:   'CD56+ nk',
-        5:   'CD8+ cytotoxic t',
-        6:   'CD4+/CD45RO+ memory t',
-        7:   'CD8+/CD45RA+ naive cytotoxic',
-        8:   'CD4+/CD45RA+/CD25- naive t',
-        9:   'CD4+/CD25 regulatory t'
-}
+data_mat = scipy.io.loadmat(path + 'Zeisel.mat')
+data = data_mat['data']
+genes = data_mat['genes']
+labels = data_mat['label_names']
+true_labels = [
+        'astrocytes_ependymal',
+        'endothelial-mural',
+        'interneurons',
+        'microglia',
+        'oligodendrocytes',
+        'pyramidal CA1',
+        'pyramidal SS',
+]
 
-# potentially correct labels
+# potentially correct labels - TODO
 true_labels_cell_ontology = {
-        0:   ['B cell'],
-        1:   ['monocyte', 'classical monocyte', 'non-classical monocyte'],
-        2:   ['hematopoietic precursor cell'],
-        3:   ['T cell'],
-        4:   ['natural killer cell'],
-        5:   ['T cell'],
-        6:   ['T cell'],
-        7:   ['T cell'],
-        8:   ['T cell', 'immature T cell'],
-        9:   ['T cell']
+        'astrocytes_ependymal': [],
+        'endothelial-mural': [],
+        'interneurons': [],
+        'microglia': [],
+        'oligodendrocytes': [],
+        'pyramidal CA1': [],
+        'pyramidal SS': [],
 }
 
 # TODO: run a systematic experiment

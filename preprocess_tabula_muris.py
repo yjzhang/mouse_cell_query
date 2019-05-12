@@ -1,4 +1,5 @@
 # TODO: preprocess the tabula muris data into a format that can be queried upon.
+# data source: https://figshare.com/articles/Single-cell_RNA-seq_data_from_microfluidic_emulsion_v2_/5968960
 # tabula_muris/droplet.zip
 
 import os
@@ -27,6 +28,7 @@ for index, row in annotations_droplet.iterrows():
         print(tissue, channel)
         current_matrix = scipy.io.mmread(os.path.join('tabula_muris', 'droplet', dirname, 'matrix.mtx'))
         current_matrix = sparse.csc_matrix(current_matrix)
+        # TODO: preprocess current_matrix?
         current_barcodes = pd.read_csv(os.path.join('tabula_muris', 'droplet', dirname, 'barcodes.tsv'), header=None)
     cell_barcode = row.cell[-16:]+'-1'
     index = np.where(current_barcodes[0] == cell_barcode)[0][0]
@@ -51,6 +53,13 @@ for cell_type, values in cell_type_values.items():
     values_mean /= len(values)
     cell_type_means[cell_type] = values_mean
 
+# calculate cell type medians
+cell_type_medians = {}
+for cell_type, values in cell_type_values.items():
+    v_matrix = np.vstack([x.toarray().flatten() for x in values])
+    # do a median calculation here
+    cell_type_medians[cell_type] = np.median(v_matrix, 0)
+
 # dump as pickle
 import pickle
 with open('cell_type_means_dict.pkl', 'wb') as f:
@@ -62,6 +71,18 @@ with open('cell_type_ontology_ids.pkl', 'wb') as f:
 # convert to h5 using pytables
 from uncurl_analysis import dense_matrix_h5
 dense_matrix_h5.store_dict('cell_type_means.h5', cell_type_means)
+dense_matrix_h5.store_dict('cell_type_medians.h5', cell_type_medians)
+
+# save the whole matrix of cell_type_values.
+import subprocess
+os.makedirs('cell_type_matrices', exist_ok=True)
+for cell_type, values in cell_type_values.items():
+    # this is of shape cells x genes
+    v_matrix = np.vstack([x.toarray().flatten() for x in values])
+    v_matrix = sparse.csc_matrix(v_matrix)
+    scipy.io.mmwrite('cell_type_matrices/{0}.mtx'.format(cell_type), v_matrix)
+    subprocess.call(['gzip', 'cell_type_matrices/{0}.mtx'.format(cell_type)])
+
 
 # get gene names
 # it appears that the gene names are constant across all subsets
