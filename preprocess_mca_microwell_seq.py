@@ -16,17 +16,35 @@ class GeneNameTransform(object):
             old_gene_names (array of str)
             new_gene_names (array of str)
         """
-        self.old_to_unified = []
-        self.new_to_unified = []
+        self.names_set = set(old_gene_names)
+        self.names_set.update(new_gene_names)
+        self.names_list = list(self.names_set)
+        old_indices = {x: i for i, x in enumerate(old_gene_names)}
+        new_indices = {x: i for i, x in enumerate(new_gene_names)}
+        self.old_to_unified = np.array([old_indices[x] if x in old_indices else -1 for x in self.names_list])
+        self.old_zero_mask = np.array([i for i, x in enumerate(self.names_list) if x not in old_indices])
+        self.new_to_unified = np.array([new_indices[x] if x in new_indices else -1 for x in self.names_list])
+        self.new_zero_mask = np.array([i for i, x in enumerate(self.names_list) if x not in new_indices])
 
-    def transform_old(self, new_data):
+    def transform_old(self, old_data):
         """
         Transforms a dataset of the "old" gene names to the unified form.
+
+        old_data: array
         """
+        new_data = old_data[self.old_to_unified]
+        if len(self.old_zero_mask) > 0:
+            new_data[self.old_zero_mask] = 0
+        return new_data
 
     def transform_new(self, new_data):
         """
+        transforms a dataset of the "new" gene names to the unified form.
         """
+        new_data = new_data[self.new_to_unified]
+        if len(self.new_zero_mask) > 0:
+            new_data[self.new_zero_mask] = 0
+        return new_data
 
 annotations = pd.read_csv('mca_microwell_seq/MCA_CellAssignments.csv')
 
@@ -35,43 +53,63 @@ current_tissue = None
 current_table = None
 current_matrix = None
 current_barcodes = None
+old_genes = None
 current_genes = None
-prev_cell_type = None
+gene_mapper = None
+
 cell_type_values = {}
 cell_type_genes = {}
+new_matrix = False
+new_cell_type = False
 # TODO: try to align gene names across dataset?
 for index, row in annotations.iterrows():
-    try:
-        batch = row.Batch
-        tissue = row.Tissue
-        cell_barcode = row['Cell.Barcode']
-        cell_type = row['Annotation']
-        if batch != current_batch:
-            dirname = ''.join(batch.split('_'))
-            current_tissue = tissue
-            current_batch = batch
-            print(batch)
-            try:
-                current_table = pd.read_table(os.path.join('mca_microwell_seq', 'rmbatch_dge', '{0}_rm.batch_dge.txt.gz'.format(dirname)), sep=' ')
-            except:
-                dirname = batch.split('_')[0]
-                current_table = pd.read_table(os.path.join('mca_microwell_seq', 'rmbatch_dge', '{0}_rm.batch_dge.txt.gz'.format(dirname)), sep=' ')
-            if prev_cell_type == cell_type:
-                # TODO: figure out how the genes should work?
-                old_genes = current_genes
-                pass
-            current_barcodes = np.array([x.split('.')[1] for x in current_table.columns])
-            current_genes = current_table.index.values.astype(str)
-            current_matrix = current_table.values
-        index = np.where(current_barcodes == cell_barcode)[0][0]
-        if cell_type not in cell_type_values:
-            cell_type = cell_type.replace('/', '-')
-            cell_type_values[cell_type] = []
-            cell_type_genes[cell_type] = current_genes
+    batch = row.Batch
+    tissue = row.Tissue
+    cell_barcode = row['Cell.Barcode']
+    cell_type = row['Annotation']
+    if batch != current_batch:
+        new_matrix = True
+        dirname = ''.join(batch.split('_'))
+        current_tissue = tissue
+        current_batch = batch
+        print(batch)
+        try:
+            current_table = pd.read_table(os.path.join('mca_microwell_seq', 'rmbatch_dge', '{0}_rm.batch_dge.txt.gz'.format(dirname)), sep=' ')
+        except:
+            dirname = batch.split('_')[0]
+            current_table = pd.read_table(os.path.join('mca_microwell_seq', 'rmbatch_dge', '{0}_rm.batch_dge.txt.gz'.format(dirname)), sep=' ')
+        current_barcodes = np.array([x.split('.')[1] for x in current_table.columns])
+        current_genes = current_table.index.values.astype(str)
+        current_matrix = current_table.values
+        gene_mapper = None
+    else:
+        new_matrix = False
+    index = np.where(current_barcodes == cell_barcode)[0][0]
+    if cell_type not in cell_type_values:
+        new_cell_type = True
+        cell_type = cell_type.replace('/', '-')
+        cell_type_values[cell_type] = []
+        cell_type_genes[cell_type] = current_genes
+        gene_mapper = None
+    else:
+        new_cell_type = False
+    if len(cell_type_genes[cell_type]) != len(current_genes) or (cell_type_genes[cell_type] != current_genes).any():
+        # TODO: transform gene set
+        if gene_mapper is None:
+            gene_mapper = GeneNameTransform(cell_type_genes[cell_type], current_genes)
+            new_gene_list = np.array(gene_mapper.names_list)
+            new_cell_type_data = []
+            for array in cell_type_values[cell_type]:
+                new_cell_type_data.append(gene_mapper.transform_old(array))
+            cell_type_values[cell_type] = new_cell_type_data
+            cell_type_genes[cell_type] = new_gene_list
+            new_data = gene_mapper.transform_new(current_matrix[:, index])
+            cell_type_values[cell_type].append(new_data)
+        else:
+            new_data = gene_mapper.transform_new(current_matrix[:, index])
+            cell_type_values[cell_type].append(new_data)
+    else:
         cell_type_values[cell_type].append(current_matrix[:, index])
-        prev_cell_type = cell_type
-    except:
-        continue
 
 import pickle
 with open('cell_type_values_mca_dict.pkl', 'wb') as f:
