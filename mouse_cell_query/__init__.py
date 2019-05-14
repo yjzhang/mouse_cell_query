@@ -8,7 +8,9 @@ from .utils import search
 PATH = os.path.dirname(__file__)
 DATA_MEANS_PATH = os.path.join(PATH, 'data', 'cell_type_means.h5')
 DATA_MEDIANS_PATH = os.path.join(PATH, 'data', 'cell_type_medians.h5')
+DATA_MCA_MEANS_PATH = os.path.join(PATH, 'data', 'cell_type_means_mca.h5')
 GENES_PATH = os.path.join(PATH, 'data', 'gene_names.txt')
+GENES_MCA_PATH = os.path.join(PATH, 'data', 'cell_type_genes_mca.h5')
 
 def search_db(input_array, input_gene_names, method='spearman', db='means'):
     """

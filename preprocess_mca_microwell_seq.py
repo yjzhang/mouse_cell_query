@@ -53,22 +53,22 @@ current_tissue = None
 current_table = None
 current_matrix = None
 current_barcodes = None
-old_genes = None
 current_genes = None
-gene_mapper = None
+prev_cell_type = None
 
 cell_type_values = {}
 cell_type_genes = {}
-new_matrix = False
-new_cell_type = False
-# TODO: try to align gene names across dataset?
+# each batch-cell type pair has a unique gene mapper
+gene_mappers = {}
+
 for index, row in annotations.iterrows():
     batch = row.Batch
     tissue = row.Tissue
     cell_barcode = row['Cell.Barcode']
     cell_type = row['Annotation']
+    print(index, cell_barcode, cell_type)
     if batch != current_batch:
-        new_matrix = True
+        gene_mappers = {}
         dirname = ''.join(batch.split('_'))
         current_tissue = tissue
         current_batch = batch
@@ -81,35 +81,37 @@ for index, row in annotations.iterrows():
         current_barcodes = np.array([x.split('.')[1] for x in current_table.columns])
         current_genes = current_table.index.values.astype(str)
         current_matrix = current_table.values
-        gene_mapper = None
-    else:
-        new_matrix = False
-    index = np.where(current_barcodes == cell_barcode)[0][0]
+    try:
+        index = np.where(current_barcodes == cell_barcode)[0][0]
+    except:
+        continue
     if cell_type not in cell_type_values:
-        new_cell_type = True
         cell_type = cell_type.replace('/', '-')
         cell_type_values[cell_type] = []
         cell_type_genes[cell_type] = current_genes
-        gene_mapper = None
-    else:
-        new_cell_type = False
     if len(cell_type_genes[cell_type]) != len(current_genes) or (cell_type_genes[cell_type] != current_genes).any():
         # TODO: transform gene set
-        if gene_mapper is None:
+        if cell_type not in gene_mappers:
+            print('new gene mapper')
             gene_mapper = GeneNameTransform(cell_type_genes[cell_type], current_genes)
+            gene_mappers[cell_type] = gene_mapper
             new_gene_list = np.array(gene_mapper.names_list)
             new_cell_type_data = []
             for array in cell_type_values[cell_type]:
+                assert(len(array) == len(cell_type_genes[cell_type]))
                 new_cell_type_data.append(gene_mapper.transform_old(array))
+                assert(len(new_cell_type_data[-1]) == len(new_gene_list))
             cell_type_values[cell_type] = new_cell_type_data
             cell_type_genes[cell_type] = new_gene_list
             new_data = gene_mapper.transform_new(current_matrix[:, index])
             cell_type_values[cell_type].append(new_data)
         else:
+            gene_mapper = gene_mappers[cell_type]
             new_data = gene_mapper.transform_new(current_matrix[:, index])
             cell_type_values[cell_type].append(new_data)
     else:
         cell_type_values[cell_type].append(current_matrix[:, index])
+    prev_cell_type = cell_type
 
 import pickle
 with open('cell_type_values_mca_dict.pkl', 'wb') as f:
@@ -131,6 +133,7 @@ for cell_type, values in cell_type_values.items():
         try:
             values_mean += v.flatten()
         except:
+            print('error in calculating means')
             continue
     values_mean /= len(values)
     cell_type_means[cell_type] = values_mean
@@ -153,7 +156,7 @@ import subprocess
 os.makedirs('cell_type_matrices_mca', exist_ok=True)
 for cell_type, values in cell_type_values.items():
     # this is of shape cells x genes
-    v_matrix = np.vstack([x.toarray().flatten() for x in values])
+    v_matrix = np.vstack([x.flatten() for x in values])
     v_matrix = sparse.csc_matrix(v_matrix)
     scipy.io.mmwrite('cell_type_matrices_mca/{0}.mtx'.format(cell_type), v_matrix)
     subprocess.call(['gzip', 'cell_type_matrices_mca/{0}.mtx'.format(cell_type)])
