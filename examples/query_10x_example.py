@@ -41,11 +41,13 @@ import matplotlib.pyplot as plt
 plt.figure(figsize=(12, 7))
 #methods = ['spearman', 'spearman_nonzero', 'cosine', 'poisson', 'random']
 methods = ['spearman', 'spearman_nonzero', 'cosine', 'poisson', 'random']
-dbs = ['means', 'medians']
+dbs = ['tm_means', 'mca_means']
 ticks = ['x', 'o', '*', '+', 's']
 ranks = 21
 for method, tick in zip(methods, ticks):
+    print(method)
     for db in dbs:
+        print(db)
         cell_label_results = {}
         for lab in sorted(list(set(labels))):
             results = mouse_cell_query.search_db(np.array(data[:, labels==lab].mean(1)).flatten(), genes, method=method, db=db)
@@ -57,8 +59,15 @@ for method, tick in zip(methods, ticks):
             true_results = true_labels_cell_ontology[labi]
             rank = 0
             for i, xr in enumerate(results):
+                has_rank = False
                 if xr[0] in true_results:
+                    has_rank = True
                     rank = i
+                for tr in true_results:
+                    if tr in xr[0]:
+                        has_rank = True
+                        rank = i
+                if has_rank:
                     break
             result_ranks.append(rank)
         result_ranks = np.array(result_ranks)
@@ -86,8 +95,3 @@ plt.ylabel('accuracy')
 plt.xticks(range(0, ranks, int(ranks/10)))
 plt.legend()
 plt.savefig('query_accuracy_10x_400.png', dpi=200)
-
-
-# try a different dataset... Zeisel dataset?
-path = '/home/yjzhang/Grad_School/single_cell/uncurl_test_datasets/zeisel/'
-data = scipy.io.loadmat(path + 'Zeisel.mat')

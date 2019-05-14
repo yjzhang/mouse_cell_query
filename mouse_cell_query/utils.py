@@ -3,6 +3,12 @@
 import numpy as np
 import scipy.stats
 
+try:
+    from functools import lru_cache
+except ImportError:
+    from backports.functools_lru_cache import lru_cache
+
+
 def gene_overlap_indices(input_gene_names, db_gene_names):
     """
     This returns two arrays of integers: an array of indices in input_genes,
@@ -12,6 +18,10 @@ def gene_overlap_indices(input_gene_names, db_gene_names):
         input_gene_names: list or array of strings
         db_gene_names: list or array of strings
     """
+    return tuple_gene_overlap_indices(tuple(input_gene_names), tuple(db_gene_names))
+
+@lru_cache(maxsize=None)
+def tuple_gene_overlap_indices(input_gene_names, db_gene_names):
     # match genes between the db and the input data
     db_gene_names = [x.upper() for x in db_gene_names]
     input_gene_names = [x.upper() for x in input_gene_names]
@@ -62,7 +72,7 @@ def poisson_search(input_data, db_data):
     dist = bulk_data.log_prob_poisson(data, input_data)
     return dist
 
-def cosine_search(input_data, db_data, data_gene_ids, db_gene_ids):
+def cosine_search(input_data, db_data):
     """
     Search using cosine similarity
     """
@@ -127,12 +137,12 @@ def search(input_data, input_gene_names, db_data, db_gene_names=None, db_gene_da
     results = []
     for cell_type_name, data in db_data.items():
         if db_gene_names is not None:
-            db_data_subset = db_data[db_gene_ids]
+            db_data_subset = data[db_gene_ids]
         elif db_gene_data is not None:
-            db_genes = db_gene_data[cell_type_name]
+            db_genes = db_gene_data[cell_type_name].astype(str)
             data_gene_ids, db_gene_ids = gene_overlap_indices(input_gene_names, db_genes)
             data_subset = input_data[data_gene_ids]
-            db_data_subset = db_data[db_gene_ids]
+            db_data_subset = data[db_gene_ids]
         results.append((cell_type_name, f(data_subset, db_data_subset)))
     results.sort(key=lambda x: x[1], reverse=reverse)
     return results
