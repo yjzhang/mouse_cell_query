@@ -8,7 +8,6 @@ import scipy.io
 from scipy import sparse
 
 class GeneNameTransform(object):
-    # TODO
 
     def __init__(self, old_gene_names, new_gene_names):
         """

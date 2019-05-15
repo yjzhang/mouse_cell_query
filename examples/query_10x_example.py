@@ -44,15 +44,23 @@ methods = ['spearman', 'spearman_nonzero', 'cosine', 'poisson', 'random']
 dbs = ['tm_means', 'mca_means']
 ticks = ['x', 'o', '*', '+', 's']
 ranks = 21
+import time
+timings = {}
 for method, tick in zip(methods, ticks):
     print(method)
     for db in dbs:
         print(db)
         cell_label_results = {}
+        timing_labels = []
         for lab in sorted(list(set(labels))):
+            # time different methods
+            t0 = time.time()
             results = mouse_cell_query.search_db(np.array(data[:, labels==lab].mean(1)).flatten(), genes, method=method, db=db)
+            timing_labels.append(time.time() - t0)
             cell_label_results[lab] = results
 
+        timings[(method, db)] = timing_labels
+        print('mean time per query: ', np.mean(timing_labels))
         # get accuracy at top 1, top 5, top 10
         result_ranks = []
         for labi, results in cell_label_results.items():
