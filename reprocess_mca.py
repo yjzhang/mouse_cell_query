@@ -29,12 +29,18 @@ class GeneNameTransform(object):
         """
         # TODO: what if data is a sparse matrix... it might still work?
         if isinstance(old_data, list):
+            if len(old_data) == 0:
+                return old_data
             results = []
             for data in old_data:
                 results.append(self.transform_old(data))
             return results
         else:
-            new_data = old_data[self.old_to_unified]
+            # assume genes is first dimension
+            if len(old_data.shape) == 2:
+                new_data = old_data[self.old_to_unified, :]
+            else:
+                new_data = old_data[self.old_to_unified]
             if len(self.old_zero_mask) > 0:
                 new_data[self.old_zero_mask] = 0
             return new_data
@@ -46,11 +52,17 @@ class GeneNameTransform(object):
         new_data: 1d array
         """
         if isinstance(new_data, list):
+            if len(new_data) == 0:
+                return new_data
             results = []
             for data in new_data:
                 results.append(self.transform_new(data))
             return results
         else:
+            if len(new_data.shape) == 2:
+                new_data = new_data[self.new_to_unified, :]
+            else:
+                new_data = new_data[self.new_to_unified]
             new_data = new_data[self.new_to_unified]
             if len(self.new_zero_mask) > 0:
                 new_data[self.new_zero_mask] = 0
@@ -86,17 +98,20 @@ for cell_type in cell_types:
 
 import os
 import scipy.io
+from scipy import sparse
+
 base_dir = 'cell_type_matrices_mca'
 new_cell_types_dict = {x: [] for x in cell_type_classes_coarse}
 unified_gene_list = None
 gene_name_mapper = None
 for filename in os.listdir(base_dir):
-    data = scipy.io.mmread(os.path.join(base_dir, filename))
+    data = sparse.csc_matrix(scipy.io.mmread(os.path.join(base_dir, filename)).T)
     cell_type = filename.split('.')[0]
-    gene_names = gene_names_original[cell_type]
+    gene_names = gene_names_original[cell_type].astype(str)
     coarse_cell_type = cell_type_classes_map_coarse[cell_type]
+    print(cell_type, coarse_cell_type)
     # TODO: merge gene names
-    if len(gene_names) != len(unified_gene_list) or (gene_names != unified_gene_list).any():
+    if unified_gene_list is None or len(gene_names) != len(unified_gene_list) or (gene_names != unified_gene_list).any():
         if unified_gene_list is None:
             unified_gene_list = gene_names
         else:
@@ -105,13 +120,20 @@ for filename in os.listdir(base_dir):
             new_cell_types_dict = {k: gene_name_mapper.transform_old(v) for k, v in new_cell_types_dict.items()}
             # transform new
             data = gene_name_mapper.transform_new(data)
-            unified_gene_list = np.array(gene_name_mapper.gene_list)
+            unified_gene_list = np.array(gene_name_mapper.names_list)
     new_cell_types_dict[coarse_cell_type].append(data)
 
 # calculate means
-from scipy import sparse
 new_cell_types_dict = {k : sparse.hstack(v) for k, v in new_cell_types_dict.items()}
 new_cell_types_means = {k : np.array(v.mean(1)).flatten() for k, v in new_cell_types_dict.items()}
 
 dense_matrix_h5.store_dict('cell_type_means_mca_coarse.h5', new_cell_types_means)
 np.savetxt('mca_coarse_gene_names.txt', unified_gene_list, fmt='%s')
+
+import subprocess
+os.makedirs('cell_type_matrices_mca_coarse', exist_ok=True)
+for cell_type, v_matrix in new_cell_types_dict.items():
+    # this is of shape cells x genes
+    scipy.io.mmwrite('cell_type_matrices_mca_coarse/{0}.mtx'.format(cell_type), v_matrix)
+    subprocess.call(['gzip', 'cell_type_matrices_mca_coarse/{0}.mtx'.format(cell_type)])
+
