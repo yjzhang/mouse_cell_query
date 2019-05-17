@@ -40,8 +40,9 @@ true_labels_cell_ontology = {
 import matplotlib.pyplot as plt
 plt.figure(figsize=(12, 7))
 #methods = ['spearman', 'spearman_nonzero', 'cosine', 'poisson', 'random']
-methods = ['spearman', 'spearman_nonzero', 'cosine', 'poisson', 'random']
-dbs = ['tm_means', 'mca_means']
+#methods = ['spearman', 'kendall', 'cosine', 'poisson', 'random']
+methods = ['kendall', 'random']
+dbs = ['tm_means', 'mca_coarse_means']
 ticks = ['x', 'o', '*', '+', 's']
 ranks = 21
 import time
@@ -72,7 +73,7 @@ for method, tick in zip(methods, ticks):
                     has_rank = True
                     rank = i
                 for tr in true_results:
-                    if tr in xr[0]:
+                    if tr.lower() in xr[0].lower():
                         has_rank = True
                         rank = i
                 if has_rank:

@@ -63,6 +63,9 @@ def spearman_nonzero_search(input_data, db_data):
     corr = scipy.stats.spearmanr(input_data, db_data[nonzeros])[0]
     return corr
 
+def kendall_tau(input_data, db_data):
+    return scipy.stats.kendalltau(input_data, db_data)[0]
+
 def poisson_search(input_data, db_data):
     """
     Search using Poisson distance
@@ -115,6 +118,9 @@ def search(input_data, input_gene_names, db_data, db_gene_names=None, db_gene_da
     """
     if method == 'spearman':
         f = spearman_search
+        reverse = True
+    elif method == 'kendall':
+        f = kendall_tau
         reverse = True
     elif method == 'poisson':
         f = poisson_search

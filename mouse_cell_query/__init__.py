@@ -9,8 +9,10 @@ PATH = os.path.dirname(__file__)
 DATA_MEANS_PATH = os.path.join(PATH, 'data', 'cell_type_means.h5')
 DATA_MEDIANS_PATH = os.path.join(PATH, 'data', 'cell_type_medians.h5')
 DATA_MCA_MEANS_PATH = os.path.join(PATH, 'data', 'cell_type_means_mca.h5')
+DATA_MCA_COARSE_MEANS_PATH = os.path.join(PATH, 'data', 'cell_type_means_mca_coarse.h5')
 GENES_PATH = os.path.join(PATH, 'data', 'gene_names.txt')
 GENES_MCA_PATH = os.path.join(PATH, 'data', 'cell_type_genes_mca.h5')
+GENES_MCA_COARSE_PATH = os.path.join(PATH, 'data', 'mca_coarse_gene_names.txt')
 
 def search_db(input_array, input_gene_names, method='spearman', db='tm_means'):
     """
@@ -18,7 +20,7 @@ def search_db(input_array, input_gene_names, method='spearman', db='tm_means'):
         input_array (array): 1d array of shape genes
         input_gene_names (array): 1d array of gene names
         method (str): default: 'spearman'
-        db (str): Default: 'tm_means' (Tabula Muris means). Also: 'tm_medians', 'mca_means'
+        db (str): Default: 'tm_means' (Tabula Muris means). Also: 'tm_medians', 'mca_means', 'mca_coarse_means'
     """
     gene_names = None
     gene_data = None
@@ -31,6 +33,9 @@ def search_db(input_array, input_gene_names, method='spearman', db='tm_means'):
     elif db == 'mca_means':
         data_dict = dense_matrix_h5.H5Dict(DATA_MCA_MEANS_PATH)
         gene_data = dense_matrix_h5.H5Dict(GENES_MCA_PATH)
+    elif db == 'mca_coarse_means':
+        data_dict = dense_matrix_h5.H5Dict(DATA_MCA_COARSE_MEANS_PATH)
+        gene_names = np.loadtxt(GENES_MCA_COARSE_PATH, dtype=str)
     else:
         raise Exception('db name is unknown')
     return search(input_array, input_gene_names, data_dict, db_gene_names=gene_names, db_gene_data=gene_data, method=method)
