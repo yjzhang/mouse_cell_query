@@ -41,7 +41,7 @@ import matplotlib.pyplot as plt
 plt.figure(figsize=(12, 7))
 #methods = ['spearman', 'spearman_nonzero', 'cosine', 'poisson', 'random']
 #methods = ['spearman', 'kendall', 'cosine', 'poisson', 'random']
-methods = ['kendall', 'random']
+methods = ['spearman', 'kendall', 'random']
 dbs = ['tm_means', 'mca_coarse_means']
 ticks = ['x', 'o', '*', '+', 's']
 ranks = 21
@@ -59,6 +59,7 @@ for method, tick in zip(methods, ticks):
             results = mouse_cell_query.search_db(np.array(data[:, labels==lab].mean(1)).flatten(), genes, method=method, db=db)
             timing_labels.append(time.time() - t0)
             cell_label_results[lab] = results
+            print(lab, results[:10])
 
         timings[(method, db)] = timing_labels
         print('mean time per query: ', np.mean(timing_labels))
@@ -66,7 +67,7 @@ for method, tick in zip(methods, ticks):
         result_ranks = []
         for labi, results in cell_label_results.items():
             true_results = true_labels_cell_ontology[labi]
-            rank = 0
+            rank = len(results)
             for i, xr in enumerate(results):
                 has_rank = False
                 if xr[0] in true_results:
