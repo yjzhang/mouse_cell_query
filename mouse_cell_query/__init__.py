@@ -7,6 +7,7 @@ from .utils import search
 
 PATH = os.path.dirname(__file__)
 DATA_MEANS_PATH = os.path.join(PATH, 'data', 'cell_type_means.h5')
+DATA_FACS_MEANS_PATH = os.path.join(PATH, 'data', 'cell_type_means_tm_facs.h5')
 DATA_MEDIANS_PATH = os.path.join(PATH, 'data', 'cell_type_medians.h5')
 DATA_MCA_MEANS_PATH = os.path.join(PATH, 'data', 'cell_type_means_mca.h5')
 DATA_MCA_COARSE_MEANS_PATH = os.path.join(PATH, 'data', 'cell_type_means_mca_coarse.h5')
@@ -21,31 +22,46 @@ GENES_ALLEN_PATH = os.path.join(PATH, 'data', 'allen_gene_names.txt')
 
 DB_TO_PATH = {
         'tm_means': DATA_MEANS_PATH,
+        'tm_means_normalized': os.path.join(PATH, 'data', 'cell_type_means_tm_droplet_normalized.h5'),
         'tm_medians': DATA_MEDIANS_PATH,
         'mca_means': DATA_MCA_MEANS_PATH,
         'mca_coarse_means': DATA_MCA_COARSE_MEANS_PATH,
         'allen_cluster_means': DATA_ALLEN_CLUSTER_MEANS_PATH,
         'allen_class_means': DATA_ALLEN_CLASS_MEANS_PATH,
-        'allen_subclass_means': DATA_ALLEN_SUBCLASS_MEANS_PATH
+        'allen_subclass_means': DATA_ALLEN_SUBCLASS_MEANS_PATH,
+        'tm_facs_means': DATA_FACS_MEANS_PATH,
+        'tm_facs_means_normalized': os.path.join(PATH, 'data', 'cell_type_means_tm_facs_normalized.h5'),
 }
 
 DB_TO_GENE_PATH = {
         'tm_means': GENES_PATH,
+        'tm_means_normalized': GENES_PATH,
         'tm_medians': GENES_PATH,
         'mca_means': GENES_MCA_PATH,
         'mca_coarse_means': GENES_MCA_COARSE_PATH,
         'allen_cluster_means': GENES_ALLEN_PATH,
         'allen_class_means': GENES_ALLEN_PATH,
-        'allen_subclass_means': GENES_ALLEN_PATH
+        'allen_subclass_means': GENES_ALLEN_PATH,
+        'tm_facs_means': GENES_PATH,
+        'tm_facs_means_normalized': GENES_PATH
 }
+
+def get_dbs():
+    """
+    Returns a list of all valid db names.
+    """
+    return DB_TO_PATH.keys()
 
 def search_db(input_array, input_gene_names, method='spearman', db='tm_means'):
     """
-    args:
+    Args:
         input_array (array): 1d array of shape genes
         input_gene_names (array): 1d array of gene names
         method (str): default: 'spearman'
         db (str): Default: 'tm_means' (Tabula Muris means). Also: 'tm_medians', 'mca_means', 'mca_coarse_means'
+
+    Returns:
+        list of tuples of (cell name, score), sorted by similarity to query
     """
     gene_names = None
     gene_data = None
