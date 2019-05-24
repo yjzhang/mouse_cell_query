@@ -86,6 +86,10 @@ with open('tm_droplet_cellmesh_query_results.pkl', 'wb') as f:
 with open('tm_droplet_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
 
+
+with open('tm_droplet_cellmesh_query_top_cells.pkl', 'rb') as f:
+    label_cell_types = pickle.load(f)
+
 # TODO: how to compare accuracy?
 # can we use a precision-recall curve?
 # load the hand-created mappings file
@@ -102,6 +106,16 @@ with open('cell_ontology_to_cellmesh_tabula_muris.csv') as f:
         if use_cellmesh != 'n':
             cell_types_map[name] = primary_cellmesh_name
             cell_types_alternate_map[name] = alternate_cellmesh_names
+
+with open('tm_cell_onto_alternate_names.csv') as f:
+    l0 = f.readline()
+    for line in f.readlines():
+        line_data = line.split(',')
+        name = line_data[1]
+        alternate_cell_type_names = line_data[2:]
+        if name in cell_types_alternate_map:
+            cell_types_alternate_map[name].extend(alternate_cell_type_names)
+
 
 # TODO: calculate accuracy of each label list
 label_accuracies = {}
@@ -125,7 +139,6 @@ for key, value in label_cell_types.items():
     label_accuracies[key] = accuracies
     label_extended_accuracies[key] = extended_accuracies
 
-from sklearn.metrics import precision_recall_curve
 
 
 def calculate_precision_recall_curve(accuracies, n_relevant=1, use_extended=False):
@@ -155,7 +168,7 @@ label_map = {}
 for key, val in label_extended_accuracies.items():
     label_map[key] = calculate_precision_recall_curve(val, use_extended=True)[2]
 
-# TODO: take mean over methods
+# take mean over cell types
 # average MAP for all methods, over all datasets
 map_methods = {}
 for key, val in label_map.items():
@@ -164,9 +177,45 @@ for key, val in label_map.items():
         map_methods[method_key].append(val)
     except:
         map_methods[method_key] = [val]
+
 map_method_means = {key: np.mean(val) for key, val in map_methods.items()}
 
-# TODO: plot?
 with open('MAP_method_means.pkl', 'wb') as f:
     pickle.dump(map_method_means, f)
 
+with open('MAP_method_means.pkl', 'rb') as f:
+    map_method_means = pickle.load(f)
+
+# convert map_method_means to a pandas dict
+import pandas as pd
+
+map_list = [key + (v,) for key, v in map_method_means.items()]
+map_list.sort()
+map_method_means = pd.DataFrame(map_list, columns=['n_genes',  'gene_method', 'query_method', 'mean_average_precision'])
+
+map_cell_types_list = [key + (v,) for key, v in label_map.items()]
+map_cell_types_list.sort()
+map_cell_types = pd.DataFrame(map_cell_types_list, columns=['cell_type', 'n_genes',  'gene_method', 'query_method', 'mean_average_precision'])
+
+map_method_means.to_csv('MAP_method_means.csv', index=None)
+map_cell_types.to_csv('MAP_cell_types.csv', index=None)
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+map_method_means = pd.read_csv('MAP_method_means.csv')
+map_cell_types = pd.read_csv('MAP_cell_types.csv')
+
+# TODO: plot?
+# plot cellmarker, cellmesh, cellmesh_tfidf. fix gene_method='ratio', group by query_method, plot over all n_genes.
+
+map_method_means_subset = map_method_means[map_method_means.gene_method=='ratio']
+
+sns.set(style='whitegrid', font_scale=1.5)
+fig, ax = plt.subplots(figsize=(8, 10))
+g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=map_method_means_subset, ax=ax)
+plt.ylim(0, 0.8)
+plt.title('Cell Type Annotation Accuracy')
+plt.savefig('map_ratios_tm_droplet.png', dpi=100)
+
+# analysis: which cell types did each of the methods perform poorly on?
