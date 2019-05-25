@@ -219,3 +219,20 @@ plt.title('Cell Type Annotation Accuracy')
 plt.savefig('map_ratios_tm_droplet.png', dpi=100)
 
 # analysis: which cell types did each of the methods perform poorly on?
+best_methods_per_cell_type = map_cell_types.sort_values('mean_average_precision', ascending=False).groupby('cell_type').first()
+
+cell_type_no_cellmarker = map_cell_types[map_cell_types.query_method != 'cellmarker']
+best_methods_no_cellmarker = cell_type_no_cellmarker.sort_values('mean_average_precision', ascending=False).groupby('cell_type').first()
+
+# add scQuery results
+new_map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ratio', 'query_method': 'scQuery', 'mean_average_precision': 0.32136}, ignore_index=True)
+new_mmm_subset = new_map_method_means[(new_map_method_means.gene_method=='ratio') & (new_map_method_means.n_genes==50)]
+
+sns.set(style='whitegrid', font_scale=1.5)
+fig, ax = plt.subplots(figsize=(8, 10))
+g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=new_mmm_subset, ax=ax)
+plt.ylim(0, 0.8)
+plt.title('Cell Type Annotation Accuracy')
+plt.savefig('map_ratios_tm_droplet_with_scquery.png', dpi=100)
+
+
