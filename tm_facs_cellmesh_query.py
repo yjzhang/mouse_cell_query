@@ -10,7 +10,7 @@ import scipy.io
 from scipy import sparse
 import os
 
-path = 'tabula_muris/cell_type_matrices'
+path = 'cell_type_matrices_tm_facs'
 all_matrices = []
 all_labels = []
 for f in os.listdir(path):
@@ -30,12 +30,13 @@ print(all_matrices.shape)
 print(all_labels.shape)
 
 # save all_matrices, all_labels
-scipy.io.mmwrite('tm_droplet_all_matrices.mtx', all_matrices)
-np.savetxt('tm_droplet_all_labels.txt', all_labels, fmt='%s')
+scipy.io.mmwrite('tm_facs_all_matrices.mtx', all_matrices)
+np.savetxt('tm_facs_all_labels.txt', all_labels, fmt='%s')
 
 genes = np.loadtxt('mouse_cell_query/data/gene_names.txt', dtype=str)
-all_matrices = scipy.io.mmread('tm_droplet_all_matrices.mtx')
-all_labels = np.loadtxt('tm_droplet_all_labels.txt', dtype=str, delimiter='##')
+
+all_matrices = scipy.io.mmread('tm_facs_all_matrices.mtx')
+all_labels = np.loadtxt('tm_facs_all_labels.txt', dtype=str, delimiter='##')
 
 # 2. calculate diffexp for each cluster
 from uncurl_analysis import gene_extraction
@@ -81,13 +82,13 @@ for label in labels_set:
                 print(label, n_gene, method, query_method, top_cells[:10])
 
 import pickle
-with open('tm_droplet_cellmesh_query_results.pkl', 'wb') as f:
+with open('tm_facs_cellmesh_query_results.pkl', 'wb') as f:
     pickle.dump(label_results, f)
-with open('tm_droplet_cellmesh_query_top_cells.pkl', 'wb') as f:
+with open('tm_facs_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
 
 
-with open('tm_droplet_cellmesh_query_top_cells.pkl', 'rb') as f:
+with open('tm_facs_cellmesh_query_top_cells.pkl', 'rb') as f:
     label_cell_types = pickle.load(f)
 
 # TODO: how to compare accuracy?
@@ -197,83 +198,7 @@ map_cell_types_list = [key + (v,) for key, v in label_map.items()]
 map_cell_types_list.sort()
 map_cell_types = pd.DataFrame(map_cell_types_list, columns=['cell_type', 'n_genes',  'gene_method', 'query_method', 'mean_average_precision'])
 
-map_method_means.to_csv('MAP_method_means.csv', index=None)
-map_cell_types.to_csv('MAP_cell_types.csv', index=None)
+map_method_means.to_csv('MAP_facs_method_means.csv', index=None)
+map_cell_types.to_csv('MAP_facs_cell_types.csv', index=None)
 
 ##################################################################
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-map_method_means = pd.read_csv('MAP_method_means.csv')
-map_cell_types = pd.read_csv('MAP_cell_types.csv')
-# load scQuery results
-scQuery_results = []
-with open('scQuery_top_gene_results.csv') as f:
-    for i, line in enumerate(f.readlines()):
-        line_data = line.split(',')[:2]
-        if i > 0:
-            line_data[1] = float(line_data[1])
-        scQuery_results.append(line_data)
-scQuery_results = pd.DataFrame(scQuery_results[1:], columns=['cell_type', 'mean_average_precision'])
-scQuery_results['n_genes'] = 50
-scQuery_results['query_method'] = 'scQuery'
-scQuery_results['gene_method'] = 'ratio'
-
-# TODO: plot?
-# plot cellmarker, cellmesh, cellmesh_tfidf. fix gene_method='ratio', group by query_method, plot over all n_genes.
-
-# for each cell type, plot performance of all methods
-all_cell_types = sorted(list(set(map_cell_types.cell_type)))
-map_cell_types = map_cell_types.append(scQuery_results)
-map_cell_types_subset = map_cell_types[map_cell_types.gene_method=='ratio']
-sns.set(style='whitegrid', font_scale=1.0)
-fig, axes = plt.subplots(7, 7, figsize=(35, 28))
-for i, axes_1 in enumerate(axes):
-    for j, ax in enumerate(axes_1):
-        index = i*7 + j
-        data_subset = map_cell_types_subset[map_cell_types_subset.cell_type==all_cell_types[index]]
-        g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=data_subset, ax=ax)
-        ax.set_title(all_cell_types[index])
-        if j != 0:
-            ax.set_ylabel('')
-        if i != 6:
-            ax.set_xlabel('')
-        ax.set_ylim(0, 1)
-        if i != j:
-            ax.get_legend().remove()
-plt.savefig('map_ratios_tm_droplet_all_cell_types.png', dpi=100)
-
-
-
-map_method_means_subset = map_method_means[map_method_means.gene_method=='ratio']
-
-# plot performance of all methods
-sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(8, 10))
-g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=map_method_means_subset, ax=ax)
-plt.ylim(0, 0.8)
-plt.title('Cell Type Annotation Accuracy')
-plt.savefig('map_ratios_tm_droplet.png', dpi=100)
-
-# analysis: which cell types did each of the methods perform poorly on?
-best_methods_per_cell_type = map_cell_types.sort_values('mean_average_precision', ascending=False).groupby('cell_type').first()
-
-cell_type_no_cellmarker = map_cell_types[map_cell_types.query_method != 'cellmarker']
-best_methods_no_cellmarker = cell_type_no_cellmarker.sort_values('mean_average_precision', ascending=False).groupby('cell_type').first()
-
-# add scQuery results
-new_map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ratio', 'query_method': 'scQuery', 'mean_average_precision': 0.32136}, ignore_index=True)
-new_mmm_subset = new_map_method_means[(new_map_method_means.gene_method=='ratio') & (new_map_method_means.n_genes==50)]
-
-sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(8, 10))
-g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=new_mmm_subset, ax=ax)
-plt.ylim(0, 0.8)
-plt.title('Cell Type Annotation Accuracy')
-plt.savefig('map_ratios_tm_droplet_with_scquery.png', dpi=100)
-
-
-# plot all cell types
-# for each
