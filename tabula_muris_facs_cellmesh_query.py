@@ -10,6 +10,7 @@ import scipy.io
 from scipy import sparse
 import os
 
+"""
 path = 'cell_type_matrices_tm_facs'
 all_matrices = []
 all_labels = []
@@ -32,8 +33,9 @@ print(all_labels.shape)
 # save all_matrices, all_labels
 scipy.io.mmwrite('tm_facs_all_matrices.mtx', all_matrices)
 np.savetxt('tm_facs_all_labels.txt', all_labels, fmt='%s')
+"""
 
-genes = np.loadtxt('mouse_cell_query/data/gene_names.txt', dtype=str)
+genes = np.loadtxt('tabula_muris_facs_genes.txt', dtype=str)
 
 all_matrices = scipy.io.mmread('tm_facs_all_matrices.mtx')
 all_labels = np.loadtxt('tm_facs_all_labels.txt', dtype=str, delimiter='##')

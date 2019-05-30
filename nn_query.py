@@ -15,10 +15,11 @@ def sparse_batch_iterator(data, labels, batch_size=50, shuffle=True):
     n_batches = int(np.ceil(data.shape[0]/batch_size))
     counter = 0
     shuffle_index = np.arange(data.shape[0])
-    np.random.shuffle(shuffle_index)
-    # shuffle data and labels
-    data = data[shuffle_index, :]
-    labels = labels[shuffle_index]
+    if shuffle:
+        np.random.shuffle(shuffle_index)
+        # shuffle data and labels
+        data = data[shuffle_index, :]
+        labels = labels[shuffle_index]
     while True:
         index_batch = shuffle_index[batch_size*counter:batch_size*(counter+1)]
         X_batch = data[index_batch,:].todense()
@@ -26,8 +27,9 @@ def sparse_batch_iterator(data, labels, batch_size=50, shuffle=True):
         counter += 1
         yield (np.array(X_batch), y_batch)
         if (counter >= n_batches):
-            np.random.shuffle(shuffle_index)
-            counter=0
+            if shuffle:
+                np.random.shuffle(shuffle_index)
+        counter=0
 
 def sparse_batch_data_iterator(data, batch_size=50, shuffle=True):
     """
@@ -37,9 +39,9 @@ def sparse_batch_data_iterator(data, batch_size=50, shuffle=True):
     n_batches = int(np.ceil(data.shape[0]/batch_size))
     counter = 0
     shuffle_index = np.arange(data.shape[0])
-    np.random.shuffle(shuffle_index)
     # shuffle data and labels
     if shuffle:
+        np.random.shuffle(shuffle_index)
         data = data[shuffle_index, :]
     while True:
         index_batch = shuffle_index[batch_size*counter:batch_size*(counter+1)]
@@ -47,8 +49,9 @@ def sparse_batch_data_iterator(data, batch_size=50, shuffle=True):
         counter += 1
         yield np.array(X_batch)
         if (counter >= n_batches):
-            np.random.shuffle(shuffle_index)
-            counter=0
+            if shuffle:
+                np.random.shuffle(shuffle_index)
+            counter = 0
 
 
 class Classifier(object):
