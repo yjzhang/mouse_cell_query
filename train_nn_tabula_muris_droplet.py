@@ -35,8 +35,9 @@ model.fit(train_matrix, train_labels, n_epochs=2)
 # test...
 results = model.predict(test_matrix, genes)
 accuracy = float(sum(results.argmax(1)==all_labels_ints[test_indices]))/len(test_indices)
-print('accuracy:', accuracy)
+print('accuracy of droplet model on droplet data:', accuracy)
 model.save('tm_droplet_model.h5')
+print('saved droplet-seq model')
 
-# load model, test on FACS data
-model = nn_query.Classifier.load_from_file('tm_droplet_model.h5')
+####################################################################################
+
