@@ -152,3 +152,67 @@ def search(input_data, input_gene_names, db_data, db_gene_names=None, db_gene_da
         results.append((cell_type_name, f(data_subset, db_data_subset)))
     results.sort(key=lambda x: x[1], reverse=reverse)
     return results
+
+def spearman_pval_search(input_data, input_gene_names, db_data, db_gene_names=None, db_gene_data=None):
+    """
+    Runs spearman search and also returns pvals.
+
+    Args:
+        input_data (array): 1d array representing gene expression
+        input_gene_names (array or list): sequence of gene names present in data
+        db_data (dict): dict of cell type : 1d array of mean gene expression for that cell type
+        db_gene_names (array or list): sequence of gene names present in db
+        db_gene_data (dict): dict of cell type : array of gene names (optional, only one of db_gene_names and db_gene_data is needed).
+
+    Returns:
+        list of tuples (cell type, spearmanr_score, pval)
+    """
+    if db_gene_names is not None:
+        data_gene_ids, db_gene_ids = gene_overlap_indices(input_gene_names, db_gene_names)
+        data_subset = input_data[data_gene_ids]
+    results = []
+    for cell_type_name, data in db_data.items():
+        if db_gene_names is not None:
+            db_data_subset = data[db_gene_ids]
+        elif db_gene_data is not None:
+            db_genes = db_gene_data[cell_type_name].astype(str)
+            data_gene_ids, db_gene_ids = gene_overlap_indices(input_gene_names, db_genes)
+            data_subset = input_data[data_gene_ids]
+            db_data_subset = data[db_gene_ids]
+        score, pval = scipy.stats.spearmanr(data_subset, db_data_subset)
+        results.append((cell_type_name, score, pval))
+    results.sort(key=lambda x: x[1], reverse=True)
+    return results
+
+def spearman_permutation_pval_search(input_data, input_gene_names, db_data, db_gene_names=None, db_gene_data=None, n_perms=100):
+    """
+    Runs spearman search; calculates P(score >= score1) for each score1 using a permutation test.
+
+    Args:
+        input_data (array): 1d array representing gene expression
+        input_gene_names (array or list): sequence of gene names present in data
+        db_data (dict): dict of cell type : 1d array of mean gene expression for that cell type
+        db_gene_names (array or list): sequence of gene names present in db
+
+    Returns:
+        list of tuples (cell type, spearmanr_score, pval)
+    """
+    if db_gene_names is not None:
+        data_gene_ids, db_gene_ids = gene_overlap_indices(input_gene_names, db_gene_names)
+        data_subset = input_data[data_gene_ids]
+    results = []
+    db_data_subsets = []
+    for cell_type_name, data in db_data.items():
+        if db_gene_names is not None:
+            db_data_subset = data[db_gene_ids]
+            db_data_subsets.append(db_data_subset)
+        score, pval = scipy.stats.spearmanr(data_subset, db_data_subset)
+        results.append((cell_type_name, score, pval))
+    results.sort(key=lambda x: x[1], reverse=True)
+    for i in range(n_perms):
+        for cell_type_name, data in db_data.items():
+            db_data_subset = db_data_subsets[i]
+            score, pval = scipy.stats.spearmanr(data_subset, db_data_subset)
+            results.append((cell_type_name, score, pval))
+    return results
+
