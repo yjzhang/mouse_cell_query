@@ -1,0 +1,100 @@
+cellmesh_include	tabula_muris_name	cellmesh_primary	cellmesh_alternate			
+	immature B cell	Precursor Cells, B-Lymphoid	B-Lymphocytes	B-Lymphocyte Subsets		
+	erythroblast	Erythroblasts	Erythroid Precursor Cells			
+	early pro-B cell	Precursor Cells, B-Lymphoid	B-Lymphocyte Subsets			
+	proerythroblast	Erythroblasts	Erythroid Precursor Cells			
+	kidney loop of Henle ascending limb epithelial cell	Epithelial Cells	Madin Darby Canine Kidney Cells			
+	kidney capillary endothelial cell	Endothelial Cells				
+	granulocyte	Granulocytes				
+	epithelial cell	Epithelial Cells				
+	duct epithelial cell 	Epithelial Cells				
+	luminal epithelial cell of mammary gland	Epithelial Cells				
+	skeletal muscle satellite cell	Satellite Cells, Skeletal Muscle	Myoblasts, Skeletal			
+	dendritic cell	Dendritic Cells				
+	Langerhans cell	Langerhans Cells	Dendritic Cells			
+	neuroendocrine cell	Neuroendocrine Cells				
+n	basal cell					
+	stromal cell	Stromal Cells				
+	endothelial cell of hepatic sinusoid	Endothelial Cells				
+	late pro-B cell	Precursor Cells, B-Lymphoid	B-Lymphocyte Subsets	B-Lymphocytes		
+	kidney collecting duct epithelial cell	Epithelial Cells	Madin Darby Canine Kidney Cells			
+	myeloid cell	Myeloid Cells	Granulocytes	Monocytes		
+	cardiac muscle cell	Myocytes, Cardiac	Muscle Cells			
+	Fraction A pre-pro B cell	Precursor Cells, B-Lymphoid	B-Lymphocyte Subsets	B-Lymphocytes		
+	hematopoietic precursor cell	Hematopoietic Stem Cells	Lymphoid Progenitor Cells	Myeloid Progenitor Cells	Bone Marrow Cells	
+	keratinocyte	Keratinocytes	Epidermal Cells			
+	classical monocyte	Monocytes				
+	B cell	B-Lymphocytes	B-Lymphocyte Subsets			
+	kidney proximal straight tubule epithelial cell	Epithelial Cells	Madin Darby Canine Kidney Cells			
+	alveolar macrophage	Macrophages, Alveolar	Macrophages			
+	type II pneumocyte	Alveolar Epithelial Cells	Epithelial Cells			
+	bladder urothelial cell	Epithelial Cells				
+	lung endothelial cell	Endothelial Cells				
+n	kidney cell					
+	natural killer cell	Killer Cells, Natural				
+n	bladder cell					
+	immature T cell	Precursor Cells, T-Lymphoid	T-Lymphocytes	T-Lymphocyte Subsets		
+	mesenchymal cell	Mesenchymal Stem Cells				
+	leukocyte	Leukocytes	Leukocytes, Mononuclear	Lymphocytes	Lymphocyte Subsets	Monocytes
+	basal cell of epidermis	Epidermal Cells	Epithelial Cells			
+	mast cell	Mast Cells				
+	mesangial cell	Mesangial Cells	Myofibroblasts			
+	T cell 	T-Lymphocytes	T-Lymphocyte Subsets	CD4-Positive T-Lymphocytes	CD8-Positive T-Lymphocytes	
+	promonocyte	Monocyte-Macrophage Precursor Cells	Monocytes	Myeloid Progenitor Cells		
+	endocardial cell	Endothelial Cells				
+	endothelial cell	Endothelial Cells				
+	mesenchymal stem cell	Mesenchymal Stem Cells				
+	fibroblast	Fibroblasts				
+	ciliated columnar cell of tracheobronchial tree	Epithelial Cells	Cilia			
+	granulocytopoietic cell	Granulocyte Precursor Cells	Granulocytes			
+	non-classical monocyte	Monocytes				
+	macrophage	Macrophages				
+	DN1 thymic pro-T cell	Precursor Cells, T-Lymphoid	T-Lymphocytes	T-Lymphocyte Subsets		
+	monocyte	Monocytes				
+	basophil	Basophils				
+	hepatocyte	Hepatocytes				
+n	blood cell					
+# note: these are facs cells	epidermal cell	Epidermal Cells				
+	stem cell of epidermis	Stem Cells	Adult Stem Cells			
+	brain pericyte	Pericytes				
+	oligodendrocyte	Oligodendroglia				
+	epithelial cell of proximal tubule	Epithelial Cells				
+	Bergmann glial cell	Neuroglia	Astrocytes			
+	type B pancreatic cell	Insulin-Secreting Cells				
+	professional antigen presenting cell	Antigen-Presenting Cells				
+	immature NK T cell	Natural Killer T-Cells				
+	oligodendrocyte precursor cell	Oligodendrocyte Precursor Cells	Oligodendroglia			
+	pancreatic acinar cell	Acinar Cells				
+	skeletal muscle satellite stem cell	Satellite Cells, Skeletal Muscle	Myoblasts	Myoblasts, Skeletal		
+	megakaryocyte-erythroid progenitor cell	Megakaryocyte-Erythroid Progenitor Cells				
+	keratinocyte stem cell	Keratinocytes	Stem Cells			
+	mature natural killer cell	Killer Cells, Natural	Killer Cells, Lymphokine-Activated			
+	enteroendocrine cell	Enteroendocrine Cells				
+	Kupffer cell	Kupffer Cells	Macrophages			
+	immature natural killer cell	Killer Cells, Natural				
+	regulatory T cell	T-Lymphocytes	T-Lymphocytes, Regulatory			
+	pancreatic A cell	Glucagon-Secreting Cells				
+	pancreatic D cell	Somatostatin-Secreting Cells				
+	pancreatic PP cell	Pancreatic Polypeptide-Secreting Cells				
+	pre-natural killer cell	Killer Cells, Natural				
+	epithelial cell of lung	Epithelial Cells	Alveolar Epithelial Cells			
+	enterocyte of epithelium of large intestine	Enterocytes				
+	granulocyte monocyte progenitor cell	Granulocyte Precursor Cells	Monocyte-Macrophage Precursor Cells	Granulocyte-Macrophage Progenitor Cells		
+	epithelial cell of large intestine	Epithelial Cells				
+	common lymphoid progenitor	Lymphoid Progenitor Cells				
+	neuron	Neurons				
+	naive B cell	B Cells	Precursor Cells, B-Lymphoid			
+	astrocyte	Astrocytes				
+	myofibroblast cell	Myofibroblasts				
+	pancreatic ductal cell	Epithelial Cells				
+n	Slamf1-negative multipotent progenitor cell	Multipotent Stem Cells				
+	smooth muscle cell	Myocytes, Smooth Muscle	Muscle Cells			
+	precursor B cell	B-Lymphocytes				
+	lymphocyte	Lymphocytes				
+	Brush cell of epithelium proper of large intestine	Epithelial Cells	Enterocytes			
+n	Slamf1-positive multipotent progenitor cell	Multipotent Stem Cells				
+	erythrocyte	Erythrocytes				
+	pancreatic stellate cell	Pancreatic Stellate Cells				
+	mesenchymal stem cell of adipose	Mesenchymal Stem Cells				
+	microglial cell	Microglia				
+	large intestine goblet cell	Goblet Cells				

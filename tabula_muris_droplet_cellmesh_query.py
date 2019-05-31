@@ -9,7 +9,8 @@ import numpy as np
 import scipy.io
 from scipy import sparse
 import os
-
+import pickle
+"""
 path = 'tabula_muris/cell_type_matrices'
 all_matrices = []
 all_labels = []
@@ -80,12 +81,11 @@ for label in labels_set:
                 label_cell_types[(label, n_gene, method, query_method)] = top_cells
                 print(label, n_gene, method, query_method, top_cells[:10])
 
-import pickle
 with open('tm_droplet_cellmesh_query_results.pkl', 'wb') as f:
     pickle.dump(label_results, f)
 with open('tm_droplet_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
-
+"""
 
 with open('tm_droplet_cellmesh_query_top_cells.pkl', 'rb') as f:
     label_cell_types = pickle.load(f)
@@ -95,10 +95,10 @@ with open('tm_droplet_cellmesh_query_top_cells.pkl', 'rb') as f:
 # load the hand-created mappings file
 cell_types_map = {}
 cell_types_alternate_map = {}
-with open('cell_ontology_to_cellmesh_tabula_muris.csv') as f:
+with open('cell_ontology_to_cellmesh_tabula_muris.tsv') as f:
     l0 = f.readline()
     for line in f.readlines():
-        line_data = line.split(',')
+        line_data = line.split('\t')
         name = line_data[1]
         primary_cellmesh_name = line_data[2]
         alternate_cellmesh_names = line_data[3:]
@@ -107,10 +107,10 @@ with open('cell_ontology_to_cellmesh_tabula_muris.csv') as f:
             cell_types_map[name] = primary_cellmesh_name
             cell_types_alternate_map[name] = alternate_cellmesh_names
 
-with open('tm_cell_onto_alternate_names.csv') as f:
+with open('tm_cell_onto_alternate_names.tsv') as f:
     l0 = f.readline()
     for line in f.readlines():
-        line_data = line.split(',')
+        line_data = line.split('\t')
         name = line_data[1]
         alternate_cell_type_names = line_data[2:]
         if name in cell_types_alternate_map:
@@ -274,6 +274,3 @@ plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
 plt.savefig('map_ratios_tm_droplet_with_scquery.png', dpi=100)
 
-
-# plot all cell types
-# for each
