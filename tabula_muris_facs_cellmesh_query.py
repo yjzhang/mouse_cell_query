@@ -33,7 +33,8 @@ print(all_labels.shape)
 # save all_matrices, all_labels
 scipy.io.mmwrite('tm_facs_all_matrices.mtx', all_matrices)
 np.savetxt('tm_facs_all_labels.txt', all_labels, fmt='%s')
-"""
+
+#################################################################################################
 
 genes = np.loadtxt('tabula_muris_facs_genes.txt', dtype=str)
 
@@ -89,6 +90,9 @@ with open('tm_facs_cellmesh_query_results.pkl', 'wb') as f:
 with open('tm_facs_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
 
+"""
+###################################################################################
+import pickle
 
 with open('tm_facs_cellmesh_query_top_cells.pkl', 'rb') as f:
     label_cell_types = pickle.load(f)
@@ -185,6 +189,8 @@ map_method_means = {key: np.mean(val) for key, val in map_methods.items()}
 
 with open('MAP_method_means.pkl', 'wb') as f:
     pickle.dump(map_method_means, f)
+
+#####################################################################################
 
 with open('MAP_method_means.pkl', 'rb') as f:
     map_method_means = pickle.load(f)

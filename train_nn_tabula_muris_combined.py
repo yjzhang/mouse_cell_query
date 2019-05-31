@@ -36,13 +36,15 @@ test_matrix = all_matrices_normalized[test_indices, :]
 test_labels = all_labels_one_hot[test_indices, :]
 
 import nn_query
-model = nn_query.Classifier(genes, len(labels_map))
-model.fit(train_matrix, train_labels, n_epochs=10)
-# test...
-results = model.predict(test_matrix, genes)
-accuracy = float(sum(results.argmax(1)==all_labels_ints[test_indices]))/len(test_indices)
-print('test accuracy of combined model on combined data:', accuracy)
-model.save('tm_combined_model.h5')
-print('saved combined Tabula Muris model')
+for layers in [[100, 100], [200, 200], [500, 200, 200], [200, 100, 100]]:
+    print('layers: ', str(layers))
+    model = nn_query.Classifier(genes, len(labels_map), layers=layers)
+    model.fit(train_matrix, train_labels, n_epochs=5)
+    # test...
+    results = model.predict(test_matrix, genes)
+    accuracy = float(sum(results.argmax(1)==all_labels_ints[test_indices]))/len(test_indices)
+    print('test accuracy of combined model on combined data:', accuracy)
+    model.save('tm_combined_model_{0}.h5'.format('_'.join(layers)))
+#print('saved combined Tabula Muris model')
 
 model = nn_query.Classifier.load_from_file('tm_combined_model.h5')

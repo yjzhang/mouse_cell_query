@@ -56,7 +56,7 @@ def sparse_batch_data_iterator(data, batch_size=50, shuffle=True):
 
 class Classifier(object):
 
-    def __init__(self, gene_list, num_classes, model=None):
+    def __init__(self, gene_list, num_classes, model=None, layers=None):
         # TODO: layer parameters
         self.genes = gene_list
         if model is not None:
@@ -66,8 +66,13 @@ class Classifier(object):
                   metrics=['accuracy'])
         else:
             self.model = Sequential()
-            self.model.add(Dense(500, activation='tanh', input_dim=len(gene_list)))
-            self.model.add(Dense(200, activation='tanh'))
+            if layers is None:
+                layers = [500, 200]
+            for i, layer in enumerate(layers):
+                if i == 0:
+                    self.model.add(Dense(layer, activation='tanh', input_dim=len(gene_list)))
+                else:
+                    self.model.add(Dense(layer, activation='tanh'))
             self.model.add(Dense(num_classes, activation='softmax'))
             self.model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
