@@ -42,8 +42,8 @@ DB_TO_GENE_PATH = {
         'allen_cluster_means': GENES_ALLEN_PATH,
         'allen_class_means': GENES_ALLEN_PATH,
         'allen_subclass_means': GENES_ALLEN_PATH,
-        'tm_facs_means': GENES_PATH,
-        'tm_facs_means_normalized': GENES_PATH
+        'tm_facs_means': os.path.join(PATH, 'data', 'tabula_muris_facs_genes.txt'),
+        'tm_facs_means_normalized': os.path.join(PATH, 'data', 'tabula_muris_facs_genes.txt')
 }
 
 def get_dbs():
