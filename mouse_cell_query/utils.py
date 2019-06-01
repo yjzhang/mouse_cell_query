@@ -209,10 +209,14 @@ def spearman_permutation_pval_search(input_data, input_gene_names, db_data, db_g
         score, pval = scipy.stats.spearmanr(data_subset, db_data_subset)
         results.append((cell_type_name, score, pval))
     results.sort(key=lambda x: x[1], reverse=True)
+    # TODO: calculate permutation test
+    all_scores = [x[1] for x in results]
     for i in range(n_perms):
+        data_subset = np.random.permutation(data_subset)
         for cell_type_name, data in db_data.items():
             db_data_subset = db_data_subsets[i]
             score, pval = scipy.stats.spearmanr(data_subset, db_data_subset)
-            results.append((cell_type_name, score, pval))
+            all_scores.append(score)
+    # for all scores, calculate rank of score in 
     return results
 

@@ -9,7 +9,7 @@ cellmesh_include	tabula_muris_name	cellmesh_primary	cellmesh_alternate
 	epithelial cell	Epithelial Cells				
 	duct epithelial cell 	Epithelial Cells				
 	luminal epithelial cell of mammary gland	Epithelial Cells				
-	skeletal muscle satellite cell	Satellite Cells, Skeletal Muscle	Myoblasts, Skeletal			
+	skeletal muscle satellite cell	Satellite Cells, Skeletal Muscle	Myoblasts, Skeletal	Muscle Fibers, Skeletal		
 	dendritic cell	Dendritic Cells				
 	Langerhans cell	Langerhans Cells	Dendritic Cells			
 	neuroendocrine cell	Neuroendocrine Cells				
@@ -62,17 +62,17 @@ n	blood cell
 	Bergmann glial cell	Neuroglia	Astrocytes			
 	type B pancreatic cell	Insulin-Secreting Cells				
 	professional antigen presenting cell	Antigen-Presenting Cells				
-	immature NK T cell	Natural Killer T-Cells				
+	immature NK T cell	Natural Killer T-Cells	T-Lymphocyte Subsets			
 	oligodendrocyte precursor cell	Oligodendrocyte Precursor Cells	Oligodendroglia			
 	pancreatic acinar cell	Acinar Cells				
 	skeletal muscle satellite stem cell	Satellite Cells, Skeletal Muscle	Myoblasts	Myoblasts, Skeletal		
-	megakaryocyte-erythroid progenitor cell	Megakaryocyte-Erythroid Progenitor Cells				
+	megakaryocyte-erythroid progenitor cell	Megakaryocyte-Erythroid Progenitor Cells	Erythroid Precursor Cells	Megakaryocyte Progenitor Cells		
 	keratinocyte stem cell	Keratinocytes	Stem Cells			
 	mature natural killer cell	Killer Cells, Natural	Killer Cells, Lymphokine-Activated			
 	enteroendocrine cell	Enteroendocrine Cells				
 	Kupffer cell	Kupffer Cells	Macrophages			
 	immature natural killer cell	Killer Cells, Natural				
-	regulatory T cell	T-Lymphocytes	T-Lymphocytes, Regulatory			
+	regulatory T cell	T-Lymphocytes	T-Lymphocytes, Regulatory	CD4-Positive T-Lymphocytes		
 	pancreatic A cell	Glucagon-Secreting Cells				
 	pancreatic D cell	Somatostatin-Secreting Cells				
 	pancreatic PP cell	Pancreatic Polypeptide-Secreting Cells				
@@ -83,13 +83,13 @@ n	blood cell
 	epithelial cell of large intestine	Epithelial Cells				
 	common lymphoid progenitor	Lymphoid Progenitor Cells				
 	neuron	Neurons				
-	naive B cell	B Cells	Precursor Cells, B-Lymphoid			
+	naive B cell	B-Lymphocytes	Precursor Cells, B-Lymphoid			
 	astrocyte	Astrocytes				
 	myofibroblast cell	Myofibroblasts				
 	pancreatic ductal cell	Epithelial Cells				
 n	Slamf1-negative multipotent progenitor cell	Multipotent Stem Cells				
 	smooth muscle cell	Myocytes, Smooth Muscle	Muscle Cells			
-	precursor B cell	B-Lymphocytes				
+	precursor B cell	B-Lymphocytes	Precursor Cells, B-Lymphoid			
 	lymphocyte	Lymphocytes				
 	Brush cell of epithelium proper of large intestine	Epithelial Cells	Enterocytes			
 n	Slamf1-positive multipotent progenitor cell	Multipotent Stem Cells				

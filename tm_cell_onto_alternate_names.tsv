@@ -3,7 +3,7 @@
 	erythroblast	Erythroid precursor		
 	early pro-B cell	Naive B cell		
 	proerythroblast	Erythroid precursor		
-	kidney loop of Henle ascending limb epithelial cell			
+	kidney loop of Henle ascending limb epithelial cell	Nephron epithelial cell		
 	kidney capillary endothelial cell			
 	granulocyte			
 	epithelial cell			
@@ -17,7 +17,7 @@
 	stromal cell			
 	endothelial cell of hepatic sinusoid			
 	late pro-B cell	Naive B cell		
-	kidney collecting duct epithelial cell			
+	kidney collecting duct epithelial cell	Nephron epithelial cell		
 	myeloid cell	Granulocyte	Monocyte	
 	cardiac muscle cell	Cardiomyocyte	Muscle cell	
 	Fraction A pre-pro B cell	Naive B cell		
@@ -25,7 +25,7 @@
 	keratinocyte			
 	classical monocyte	Monocyte		
 	B cell			
-	kidney proximal straight tubule epithelial cell			
+	kidney proximal straight tubule epithelial cell	Nephron epithelial cell		
 	alveolar macrophage	Macrophage		
 	type II pneumocyte	Epithelial cell		
 	bladder urothelial cell	Epithelial cell		
@@ -33,7 +33,7 @@
 	kidney cell			
 	natural killer cell			
 	bladder cell			
-	immature T cell	Naive T cell		
+	immature T cell	Naive T cell	Naive CD4+ T cell	Naive CD8+ T cell
 	mesenchymal cell	Mesenchymal stem cell		
 	leukocyte	Lymphocyte	Monocyte	
 	basal cell of epidermis	Epithelial cell		
@@ -49,7 +49,7 @@
 	granulocytopoietic cell	Granulocyte	Granulocyte-monocyte progenitor	
 	non-classical monocyte			
 	macrophage			
-	DN1 thymic pro-T cell	Naive T cell		
+	DN1 thymic pro-T cell	Naive T cell	Naive CD4+ T cell	Naive CD8+ T cell
 	monocyte			
 	basophil			
 	hepatocyte			
@@ -58,7 +58,7 @@
 	stem cell of epidermis	Epidermal stem cell	Skin stem cell	
 	brain pericyte	Pericyte		
 	oligodendrocyte	Oligodendrocyte		
-	epithelial cell of proximal tubule			
+	epithelial cell of proximal tubule	Nephron epithelial cell		
 	Bergmann glial cell	Astrocyte	Radial glial cell	
 	type B pancreatic cell	Pancreatic ductal cell		
 	professional antigen presenting cell			
@@ -66,32 +66,32 @@
 	oligodendrocyte precursor cell	Oligodendrocyte	Oligodendrocyte progenitor cell	
 	pancreatic acinar cell	acinar cell		
 	skeletal muscle satellite stem cell	Myoblast	Muscle satellite cell	
-	megakaryocyte-erythroid progenitor cell	Megakaryocyte-erythroid progenitor		
+	megakaryocyte-erythroid progenitor cell	Megakaryocyte-erythroid progenitor	Erythroid precursor	Megakaryocyte progenitor cell
 	keratinocyte stem cell	Epidermal stem cell	Keratinocyte progenitor cell	
 	mature natural killer cell			
 	enteroendocrine cell			
 	Kupffer cell	Macrophage		
 	immature natural killer cell			
-	regulatory T cell			
+	regulatory T cell	Regulatory T (Treg) cell	CD4+ T cell	
 	pancreatic A cell	Pancreatic ductal cell		
 	pancreatic D cell	Pancreatic ductal cell		
-	pancreatic PP cell	Pancreatic ductal cell		
+	pancreatic PP cell	Pancreatic ductal cell	Pancreatic polypeptide cell	
 	pre-natural killer cell			
 	epithelial cell of lung			
 	enterocyte of epithelium of large intestine			
 	granulocyte monocyte progenitor cell	Granulocyte-monocyte progenitor		
 	epithelial cell of large intestine			
-	common lymphoid progenitor	Lymphoid-primed multipotent progenitor		
+	common lymphoid progenitor	Lymphoid-primed multipotent progenitor	Lymphoid stem cell	Lymphoid-primed multipotent progenitor cell
 	neuron			
 	naive B cell			
 	astrocyte			
 	myofibroblast cell			
-	pancreatic ductal cell	Pancreatic ductal cell		
+	pancreatic ductal cell	Pancreatic ductal cell	Epithelial cell	
 n	Slamf1-negative multipotent progenitor cell			
 	smooth muscle cell			
-	precursor B cell			
+	precursor B cell	Naive B cell		
 	lymphocyte			
-	Brush cell of epithelium proper of large intestine	Enterocyte		
+	Brush cell of epithelium proper of large intestine	Brush cell (Tuft cell)		
 n	Slamf1-positive multipotent progenitor cell			
 	erythrocyte			
 	pancreatic stellate cell	Pancreatic ductal cell		

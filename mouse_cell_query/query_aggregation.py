@@ -41,7 +41,7 @@ def cellmarker_cellmesh_hypergeometric_test(genes):
     seen_cell_types = set()
     for list_id, inner_id, pv in combined_pvals:
         row = list(results[list_id][inner_id])
-        if row[1].lower in seen_cell_types or row[1].lower.strip('s') in seen_cell_types:
+        if row[1].lower in seen_cell_types or row[1].lower().strip('s') in seen_cell_types:
             continue
         seen_cell_types.add(row[1].lower())
         seen_cell_types.add(row[1].strip('s').lower())
