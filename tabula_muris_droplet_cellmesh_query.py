@@ -34,6 +34,8 @@ print(all_labels.shape)
 scipy.io.mmwrite('tm_droplet_all_matrices.mtx', all_matrices)
 np.savetxt('tm_droplet_all_labels.txt', all_labels, fmt='%s')
 
+
+##########################################################################
 genes = np.loadtxt('mouse_cell_query/data/gene_names.txt', dtype=str)
 all_matrices = scipy.io.mmread('tm_droplet_all_matrices.mtx')
 all_labels = np.loadtxt('tm_droplet_all_labels.txt', dtype=str, delimiter='##')
@@ -48,15 +50,35 @@ t0 =  time.time()
 scores_u, pvals_u = gene_extraction.one_vs_rest_t(all_matrices, all_labels, eps=0.1, test='u')
 print('diffexp time for u test:', time.time() - t0)
 
+with open('tm_droplet_t_scores.pkl', 'wb') as f:
+    pickle.dump(scores_t, f)
+with open('tm_droplet_t_pvals.pkl', 'wb') as f:
+    pickle.dump(pvals_t, f)
+with open('tm_droplet_u_pvals.pkl', 'wb') as f:
+    pickle.dump(pvals_u, f)
+"""
+############################################################################
+
 # 3. for each cluster, run cellmesh and cellmarker
+
+with open('tm_droplet_t_scores.pkl', 'rb') as f:
+    scores_t = pickle.load(f)
+with open('tm_droplet_t_pvals.pkl', 'rb') as f:
+    pvals_t = pickle.load(f)
+with open('tm_droplet_u_pvals.pkl', 'rb') as f:
+    pvals_u = pickle.load(f)
+all_labels = np.loadtxt('tm_droplet_all_labels.txt', dtype=str, delimiter='##')
+genes = np.loadtxt('mouse_cell_query/data/gene_names.txt', dtype=str)
+
 import cellmesh
 import cellmarker
+from mouse_cell_query import query_aggregation
 labels_set = set(all_labels)
 label_results = {}
 label_cell_types = {}
 n_genes = [20, 50, 100, 200, 1000]
 gene_methods = ['ratio', 't', 'u']
-query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf']
+query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf', 'aggregate']
 for label in labels_set:
     for n_gene in n_genes:
         for method in gene_methods:
@@ -77,15 +99,17 @@ for label in labels_set:
                 elif query_method == 'cellmesh_tfidf':
                     results = cellmesh.normed_hypergeometric_test(top_genes)
                     top_cells = [x[1] for x in results]
-                label_results[(label, n_gene, method, query_method)] = results
+                elif query_method == 'aggregate':
+                    results = query_aggregation.cellmarker_cellmesh_hypergeometric_test(top_genes)
+                    top_cells = [x[1] for x in results[1:]]
+                #label_results[(label, n_gene, method, query_method)] = results
                 label_cell_types[(label, n_gene, method, query_method)] = top_cells
                 print(label, n_gene, method, query_method, top_cells[:10])
 
-with open('tm_droplet_cellmesh_query_results.pkl', 'wb') as f:
-    pickle.dump(label_results, f)
+#with open('tm_droplet_cellmesh_query_results.pkl', 'wb') as f:
+#    pickle.dump(label_results, f)
 with open('tm_droplet_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
-"""
 
 with open('tm_droplet_cellmesh_query_top_cells.pkl', 'rb') as f:
     label_cell_types = pickle.load(f)
@@ -229,7 +253,7 @@ all_cell_types = sorted(list(set(map_cell_types.cell_type)))
 map_cell_types = map_cell_types.append(scQuery_results)
 map_cell_types_subset = map_cell_types[map_cell_types.gene_method=='ratio']
 sns.set(style='whitegrid', font_scale=1.0)
-fig, axes = plt.subplots(7, 7, figsize=(35, 28))
+fig, axes = plt.subplots(7, 7, figsize=(45, 28))
 for i, axes_1 in enumerate(axes):
     for j, ax in enumerate(axes_1):
         index = i*7 + j
@@ -251,7 +275,7 @@ map_method_means_subset = map_method_means[map_method_means.gene_method=='ratio'
 
 # plot performance of all methods
 sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(8, 10))
+fig, ax = plt.subplots(figsize=(14, 10))
 g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=map_method_means_subset, ax=ax)
 plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
@@ -268,9 +292,56 @@ new_map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ra
 new_mmm_subset = new_map_method_means[(new_map_method_means.gene_method=='ratio') & (new_map_method_means.n_genes==50)]
 
 sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(8, 10))
+fig, ax = plt.subplots(figsize=(14, 10))
 g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=new_mmm_subset, ax=ax)
 plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
 plt.savefig('map_ratios_tm_droplet_with_scquery.png', dpi=100)
+
+
+# convert MAP to top-1, top-3, and top-5 accuracy
+map_cell_types['top_1'] = [1 if x > 0.9 else 0 for x in map_cell_types['mean_average_precision']]
+map_cell_types['top_3'] = [1 if x > 0.3 else 0 for x in map_cell_types['mean_average_precision']]
+map_cell_types['top_5'] = [1 if x >= 0.2 else 0 for x in map_cell_types['mean_average_precision']]
+map_cell_types['top_10'] = [1 if x >= 0.1 else 0 for x in map_cell_types['mean_average_precision']]
+# calculate mean top-1, top-3, and top-5 accuracy by method & gene count
+map_cell_type_means = map_cell_types.groupby(['query_method', 'gene_method', 'n_genes']).mean().reset_index()
+# plot top-1, top-3, and top-5 accuracy
+sns.set(style='whitegrid', font_scale=1.5)
+fig, axes = plt.subplots(1, 4, figsize=(48, 10))
+categories = ['top_1', 'top_3', 'top_5', 'top_10']
+titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10']
+for i, ax in enumerate(axes):
+    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+    g.set_ylim(0, 1.0)
+    g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i]))
+plt.savefig('top_1_accuracy_tm_droplet.png', dpi=100)
+
+fig, ax = plt.subplots(figsize=(14, 10))
+g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-3 Accuracy')
+plt.savefig('top_3_accuracy_tm_droplet.png', dpi=100)
+
+fig, ax = plt.subplots(figsize=(14, 10))
+g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-5 Accuracy')
+plt.savefig('top_5_accuracy_tm_droplet.png', dpi=100)
+
+# TODO: only plot the top 3 accuracy at one particular gene count
+map_cell_type_means_subset = map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)]
+sns.set(style='whitegrid', font_scale=1.5)
+fig, ax = plt.subplots(figsize=(14, 10))
+g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-5 Accuracy')
+plt.savefig('top_5_accuracy_tm_droplet_50_genes.png', dpi=100)
+fig, ax = plt.subplots(figsize=(14, 10))
+g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-3 Accuracy')
+plt.savefig('top_3_accuracy_tm_droplet_50_genes.png', dpi=100)
+
+
 

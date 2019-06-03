@@ -295,3 +295,47 @@ plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
 plt.savefig('map_ratios_tm_facs_with_scquery.png', dpi=100)
 
+# convert MAP to top-1, top-3, and top-5 accuracy
+map_cell_types['top_1'] = [1 if x > 0.9 else 0 for x in map_cell_types['mean_average_precision']]
+map_cell_types['top_3'] = [1 if x > 0.3 else 0 for x in map_cell_types['mean_average_precision']]
+map_cell_types['top_5'] = [1 if x >= 0.2 else 0 for x in map_cell_types['mean_average_precision']]
+map_cell_types['top_10'] = [1 if x >= 0.1 else 0 for x in map_cell_types['mean_average_precision']]
+# calculate mean top-1, top-3, and top-5 accuracy by method & gene count
+map_cell_type_means = map_cell_types.groupby(['query_method', 'gene_method', 'n_genes']).mean().reset_index()
+# plot top-1, top-3, and top-5 accuracy
+sns.set(style='whitegrid', font_scale=1.5)
+fig, axes = plt.subplots(1, 4, figsize=(48, 10))
+categories = ['top_1', 'top_3', 'top_5', 'top_10'] 
+titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10'] 
+for i, ax in enumerate(axes):
+    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+    g.set_ylim(0, 1.0)
+    g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i])) 
+plt.savefig('top_1_accuracy_tm_facs.png', dpi=100)
+
+fig, ax = plt.subplots(figsize=(14, 10))
+g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-3 Accuracy')
+plt.savefig('top_3_accuracy_tm_facs.png', dpi=100)
+
+fig, ax = plt.subplots(figsize=(14, 10))
+g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-5 Accuracy')
+plt.savefig('top_5_accuracy_tm_facs.png', dpi=100)
+
+# only plot the top 5 accuracy at one particular gene count
+map_cell_type_means_subset = map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)]
+sns.set(style='whitegrid', font_scale=1.5)
+fig, ax = plt.subplots(figsize=(14, 10))
+g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Tabula Muris FACS Cell Type Annotation Top-5 Accuracy')
+plt.savefig('top_5_accuracy_tm_facs_50_genes.png', dpi=100)
+fig, ax = plt.subplots(figsize=(14, 10))
+g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Tabula Muris FACS Cell Type Annotation Top-3 Accuracy')
+plt.savefig('top_3_accuracy_tm_facs_50_genes.png', dpi=100)
+

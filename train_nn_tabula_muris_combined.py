@@ -44,7 +44,7 @@ for layers in [[100, 100], [200, 200], [500, 200, 200], [200, 100, 100]]:
     results = model.predict(test_matrix, genes)
     accuracy = float(sum(results.argmax(1)==all_labels_ints[test_indices]))/len(test_indices)
     print('test accuracy of combined model on combined data:', accuracy)
-    model.save('tm_combined_model_{0}.h5'.format('_'.join(layers)))
+    model.save('tm_combined_model_{0}.h5'.format('_'.join(map(str, layers))))
 #print('saved combined Tabula Muris model')
 
 model = nn_query.Classifier.load_from_file('tm_combined_model.h5')

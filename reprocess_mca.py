@@ -125,9 +125,12 @@ for filename in os.listdir(base_dir):
 
 # calculate means
 new_cell_types_dict = {k : sparse.hstack(v) for k, v in new_cell_types_dict.items()}
+normalize = False
+if normalize:
+    new_cell_types_dict = {k : v/v.sum(1) for k, v in new_cell_types_dict.items()}
 new_cell_types_means = {k : np.array(v.mean(1)).flatten() for k, v in new_cell_types_dict.items()}
 
-dense_matrix_h5.store_dict('cell_type_means_mca_coarse.h5', new_cell_types_means)
+dense_matrix_h5.store_dict('cell_type_means_mca_coarse_normalized.h5', new_cell_types_means)
 np.savetxt('mca_coarse_gene_names.txt', unified_gene_list, fmt='%s')
 
 import subprocess

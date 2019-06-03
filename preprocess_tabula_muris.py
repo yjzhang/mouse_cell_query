@@ -18,6 +18,7 @@ current_matrix = None
 current_barcodes = None
 tissue_values = {}
 cell_type_values = {}
+normalize = True
 for index, row in annotations_droplet.iterrows():
     channel = row.channel
     tissue = row.tissue
@@ -35,7 +36,10 @@ for index, row in annotations_droplet.iterrows():
     cell_type = row.cell_ontology_class
     if cell_type not in cell_type_values:
         cell_type_values[cell_type] = []
-    cell_type_values[cell_type].append(current_matrix[:, index])
+    values = current_matrix[:, index]
+    if normalize:
+        values = values/values.sum()
+    cell_type_values[cell_type].append(values)
 
 # mapping of cell type name to cell ontology id
 cell_name_to_ontology_id = {}
@@ -70,18 +74,18 @@ with open('cell_type_ontology_ids.pkl', 'wb') as f:
 
 # convert to h5 using pytables
 from uncurl_analysis import dense_matrix_h5
-dense_matrix_h5.store_dict('cell_type_means.h5', cell_type_means)
-dense_matrix_h5.store_dict('cell_type_medians.h5', cell_type_medians)
+dense_matrix_h5.store_dict('cell_type_means_tm_droplet_normalized.h5', cell_type_means)
+dense_matrix_h5.store_dict('cell_type_medians_tm_droplet_normalized.h5', cell_type_medians)
 
 # save the whole matrix of cell_type_values.
 import subprocess
-os.makedirs('cell_type_matrices', exist_ok=True)
+os.makedirs('cell_type_matrices_tm_droplet', exist_ok=True)
 for cell_type, values in cell_type_values.items():
     # this is of shape cells x genes
     v_matrix = np.vstack([x.toarray().flatten() for x in values])
     v_matrix = sparse.csc_matrix(v_matrix)
-    scipy.io.mmwrite('cell_type_matrices/{0}.mtx'.format(cell_type), v_matrix)
-    subprocess.call(['gzip', 'cell_type_matrices/{0}.mtx'.format(cell_type)])
+    scipy.io.mmwrite('cell_type_matrices_tm_droplet/{0}.mtx'.format(cell_type), v_matrix)
+    subprocess.call(['gzip', 'cell_type_matrices_tm_droplet/{0}.mtx'.format(cell_type)])
 
 
 # get gene names
