@@ -59,7 +59,7 @@ all_means = []
 for cell_type in sorted(data_means.keys()):
     means = data_means[cell_type]
     all_means.append(means)
-all_means = np.vstack(all_means.T)
+all_means = np.vstack(all_means).T
 data = pd.DataFrame(all_means)
 data.columns = sorted(data_means.keys())
 data.index = [x.upper() for x in genes]

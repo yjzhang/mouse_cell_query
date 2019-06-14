@@ -7,6 +7,8 @@ import pandas as pd
 import scipy.io
 from scipy import sparse
 
+# TODO: make it so all datasets have the same genes?
+
 class GeneNameTransform(object):
 
     def __init__(self, old_gene_names, new_gene_names):
@@ -29,21 +31,53 @@ class GeneNameTransform(object):
         """
         Transforms a dataset of the "old" gene names to the unified form.
 
-        old_data: array
+        old_data: 1d array
         """
-        new_data = old_data[self.old_to_unified]
-        if len(self.old_zero_mask) > 0:
-            new_data[self.old_zero_mask] = 0
-        return new_data
+        # TODO: what if data is a sparse matrix... it might still work?
+        if isinstance(old_data, list):
+            if len(old_data) == 0:
+                return old_data
+            results = []
+            for data in old_data:
+                results.append(self.transform_old(data))
+            return results
+        else:
+            # assume genes is first dimension
+            if len(old_data.shape) == 2:
+                new_data = old_data[self.old_to_unified, :]
+                if len(self.old_zero_mask) > 0:
+                    new_data[self.old_zero_mask, :] = 0
+            else:
+                new_data = old_data[self.old_to_unified]
+                if len(self.old_zero_mask) > 0:
+                    new_data[self.old_zero_mask] = 0
+            return new_data
+
 
     def transform_new(self, new_data):
         """
         transforms a dataset of the "new" gene names to the unified form.
+
+        new_data: 1d array
         """
-        new_data = new_data[self.new_to_unified]
-        if len(self.new_zero_mask) > 0:
-            new_data[self.new_zero_mask] = 0
-        return new_data
+        if isinstance(new_data, list):
+            if len(new_data) == 0:
+                return new_data
+            results = []
+            for data in new_data:
+                results.append(self.transform_new(data))
+            return results
+        else:
+            if len(new_data.shape) == 2:
+                new_data = new_data[self.new_to_unified, :]
+                if len(self.new_zero_mask) > 0:
+                    new_data[self.new_zero_mask, :] = 0
+            else:
+                new_data = new_data[self.new_to_unified]
+                if len(self.new_zero_mask) > 0:
+                    new_data[self.new_zero_mask] = 0
+            return new_data
+
 
 annotations = pd.read_csv('mca_microwell_seq/MCA_CellAssignments.csv')
 
@@ -56,9 +90,8 @@ current_genes = None
 prev_cell_type = None
 
 cell_type_values = {}
-cell_type_genes = {}
-# each batch-cell type pair has a unique gene mapper
-gene_mappers = {}
+
+unified_gene_list = None
 
 for index, row in annotations.iterrows():
     batch = row.Batch
@@ -80,6 +113,16 @@ for index, row in annotations.iterrows():
         current_barcodes = np.array([x.split('.')[1] for x in current_table.columns])
         current_genes = current_table.index.values.astype(str)
         current_matrix = current_table.values
+        # transform current_matrix...
+        if unified_gene_list is None or len(unified_gene_list) != len(current_genes) or (unified_gene_list != current_genes).any():
+            if unified_gene_list is None:
+                unified_gene_list = current_genes
+            else:
+                gene_name_mapper = GeneNameTransform(unified_gene_list, current_genes)
+                cell_type_values = {k: gene_name_mapper.transform_old(v) for k, v in cell_type_values.items()}
+                # transform new
+                current_matrix = gene_name_mapper.transform_new(current_matrix)
+                unified_gene_list = np.array(gene_name_mapper.names_list)
     try:
         index = np.where(current_barcodes == cell_barcode)[0][0]
     except:
@@ -87,43 +130,17 @@ for index, row in annotations.iterrows():
     if cell_type not in cell_type_values:
         cell_type = cell_type.replace('/', '-')
         cell_type_values[cell_type] = []
-        cell_type_genes[cell_type] = current_genes
-    if len(cell_type_genes[cell_type]) != len(current_genes) or (cell_type_genes[cell_type] != current_genes).any():
-        # TODO: transform gene set
-        if cell_type not in gene_mappers:
-            print('new gene mapper')
-            gene_mapper = GeneNameTransform(cell_type_genes[cell_type], current_genes)
-            gene_mappers[cell_type] = gene_mapper
-            new_gene_list = np.array(gene_mapper.names_list)
-            new_cell_type_data = []
-            for array in cell_type_values[cell_type]:
-                assert(len(array) == len(cell_type_genes[cell_type]))
-                new_cell_type_data.append(gene_mapper.transform_old(array))
-                assert(len(new_cell_type_data[-1]) == len(new_gene_list))
-            cell_type_values[cell_type] = new_cell_type_data
-            cell_type_genes[cell_type] = new_gene_list
-            new_data = gene_mapper.transform_new(current_matrix[:, index])
-            cell_type_values[cell_type].append(new_data)
-        else:
-            gene_mapper = gene_mappers[cell_type]
-            new_data = gene_mapper.transform_new(current_matrix[:, index])
-            cell_type_values[cell_type].append(new_data)
-    else:
-        cell_type_values[cell_type].append(current_matrix[:, index])
+    cell_type_values[cell_type].append(current_matrix[:, index])
     prev_cell_type = cell_type
+
+np.savetxt('genes_mca.txt', unified_gene_list, fmt='%s')
 
 import pickle
 with open('cell_type_values_mca_dict.pkl', 'wb') as f:
     pickle.dump(cell_type_values, f)
 
-with open('cell_type_gene_names_mca_dict.pkl', 'wb') as f:
-    pickle.dump(cell_type_genes, f)
-
-
-
 # calculate cell type means
 from uncurl_analysis import dense_matrix_h5
-dense_matrix_h5.store_dict('cell_type_genes_mca.h5', cell_type_genes)
 cell_type_means = {}
 for cell_type, values in cell_type_values.items():
     print(cell_type)
