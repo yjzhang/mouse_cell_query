@@ -70,7 +70,16 @@ with open('tm_droplet_u_pvals.pkl', 'rb') as f:
 all_labels = np.loadtxt('tm_droplet_all_labels.txt', dtype=str, delimiter='##')
 genes = np.loadtxt('mouse_cell_query/data/gene_names.txt', dtype=str)
 
+# get gene names - save ranked genes for each cell type
+top_genes_ratio = {}
+for cell, cell_genes in scores_t.items():
+    top_genes_ratio[cell] = [genes[i[0]] for i in cell_genes]
+import pandas as pd
+top_genes_ratio = pd.DataFrame(top_genes_ratio)
+top_genes_ratio.to_csv('tabula_muris_dropseq_top_genes_ratio.csv')
+
 import cellmesh
+from cellmesh import prob_method, gsva_ext_method
 import cellmarker
 from mouse_cell_query import query_aggregation
 labels_set = set(all_labels)
@@ -78,7 +87,7 @@ label_results = {}
 label_cell_types = {}
 n_genes = [20, 50, 100, 200, 1000]
 gene_methods = ['ratio', 't', 'u']
-query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf', 'aggregate']
+query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva']#, 'aggregate', 'aggregate_2']
 for label in labels_set:
     for n_gene in n_genes:
         for method in gene_methods:
@@ -102,12 +111,23 @@ for label in labels_set:
                 elif query_method == 'aggregate':
                     results = query_aggregation.cellmarker_cellmesh_hypergeometric_test(top_genes)
                     top_cells = [x[1] for x in results[1:]]
-                #label_results[(label, n_gene, method, query_method)] = results
+                    results = results[1:]
+                elif query_method == 'aggregate_2':
+                    results = query_aggregation.cellmarker_cellmesh_tfidf_hypergeometric_test(top_genes)
+                    top_cells = [x[1] for x in results[1:]]
+                    results = results[1:]
+                elif query_method == 'prob':
+                    results = prob_method.prob_test(top_genes)
+                    top_cells = [x[1] for x in results]
+                elif query_method == 'gsva':
+                    results = gsva_ext_method.gsva_ext_test(top_genes)
+                    top_cells = [x[1] for x in results]
+                label_results[(label, n_gene, method, query_method)] = [x[:-1] for x in results]
                 label_cell_types[(label, n_gene, method, query_method)] = top_cells
                 print(label, n_gene, method, query_method, top_cells[:10])
 
-#with open('tm_droplet_cellmesh_query_results.pkl', 'wb') as f:
-#    pickle.dump(label_results, f)
+with open('tm_droplet_cellmesh_query_results.pkl', 'wb') as f:
+    pickle.dump(label_results, f)
 with open('tm_droplet_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
 
@@ -122,7 +142,7 @@ cell_types_alternate_map = {}
 with open('cell_ontology_to_cellmesh_tabula_muris.tsv') as f:
     l0 = f.readline()
     for line in f.readlines():
-        line_data = line.split('\t')
+        line_data = [x.strip() for x in line.split('\t')]
         name = line_data[1]
         primary_cellmesh_name = line_data[2]
         alternate_cellmesh_names = line_data[3:]
@@ -134,7 +154,7 @@ with open('cell_ontology_to_cellmesh_tabula_muris.tsv') as f:
 with open('tm_cell_onto_alternate_names.tsv') as f:
     l0 = f.readline()
     for line in f.readlines():
-        line_data = line.split('\t')
+        line_data = [x.strip() for x in line.split('\t')]
         name = line_data[1]
         alternate_cell_type_names = line_data[2:]
         if name in cell_types_alternate_map:
@@ -253,7 +273,7 @@ all_cell_types = sorted(list(set(map_cell_types.cell_type)))
 map_cell_types = map_cell_types.append(scQuery_results)
 map_cell_types_subset = map_cell_types[map_cell_types.gene_method=='ratio']
 sns.set(style='whitegrid', font_scale=1.0)
-fig, axes = plt.subplots(7, 7, figsize=(45, 28))
+fig, axes = plt.subplots(7, 7, figsize=(55, 28))
 for i, axes_1 in enumerate(axes):
     for j, ax in enumerate(axes_1):
         index = i*7 + j
@@ -275,7 +295,7 @@ map_method_means_subset = map_method_means[map_method_means.gene_method=='ratio'
 
 # plot performance of all methods
 sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=map_method_means_subset, ax=ax)
 plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
@@ -292,7 +312,7 @@ new_map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ra
 new_mmm_subset = new_map_method_means[(new_map_method_means.gene_method=='ratio') & (new_map_method_means.n_genes==50)]
 
 sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=new_mmm_subset, ax=ax)
 plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
@@ -308,7 +328,7 @@ map_cell_types['top_10'] = [1 if x >= 0.1 else 0 for x in map_cell_types['mean_a
 map_cell_type_means = map_cell_types.groupby(['query_method', 'gene_method', 'n_genes']).mean().reset_index()
 # plot top-1, top-3, and top-5 accuracy
 sns.set(style='whitegrid', font_scale=1.5)
-fig, axes = plt.subplots(1, 4, figsize=(48, 10))
+fig, axes = plt.subplots(1, 4, figsize=(60, 10))
 categories = ['top_1', 'top_3', 'top_5', 'top_10']
 titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10']
 for i, ax in enumerate(axes):
@@ -317,13 +337,13 @@ for i, ax in enumerate(axes):
     g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i]))
 plt.savefig('top_1_accuracy_tm_droplet.png', dpi=100)
 
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-3 Accuracy')
 plt.savefig('top_3_accuracy_tm_droplet.png', dpi=100)
 
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-5 Accuracy')
@@ -332,16 +352,76 @@ plt.savefig('top_5_accuracy_tm_droplet.png', dpi=100)
 # TODO: only plot the top 3 accuracy at one particular gene count
 map_cell_type_means_subset = map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)]
 sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-5 Accuracy')
 plt.savefig('top_5_accuracy_tm_droplet_50_genes.png', dpi=100)
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-3 Accuracy')
 plt.savefig('top_3_accuracy_tm_droplet_50_genes.png', dpi=100)
 
+###############################################################################################################
 
+# TODO: create a heatmap?
+import pickle
+with open('tm_droplet_cellmesh_query_top_cells.pkl', 'rb') as f:
+    label_cell_types = pickle.load(f)
 
+# pick a subset of cell types
+# pick cells within a group?
+# immune cells: dendritic cell, B cell, natural killer cell, mast cell, T cell, macrophage, monocyte, basophil
+cells_to_include = [
+        'dendritic cell',
+        'B cell',
+        'natural killer cell',
+        'mast cell',
+        'T cell',
+        'macrophage',
+        'monocyte',
+        'basophil'
+]
+# load the hand-created mappings file
+cell_types_map = {}
+cell_types_alternate_map = {}
+with open('cell_ontology_to_cellmesh_tabula_muris.tsv') as f:
+    l0 = f.readline()
+    for line in f.readlines():
+        line_data = [x.strip() for x in line.split('\t')]
+        name = line_data[1]
+        primary_cellmesh_name = line_data[2]
+        alternate_cellmesh_names = line_data[3:]
+        use_cellmesh = line_data[0]
+        if use_cellmesh != 'n':
+            cell_types_map[name] = primary_cellmesh_name
+            cell_types_alternate_map[name] = alternate_cellmesh_names
+correct_cellmesh_results = [cell_types_map[x] for x in cells_to_include]
+cellmesh_to_index = {c: i for i, c in enumerate(correct_cellmesh_results)}
+# create a heatmap
+import numpy as np
+cell_type_results = np.zeros((len(cells_to_include), len(cells_to_include)))
+for i, c in enumerate(cells_to_include):
+    result_cells = label_cell_types[(c, 50, 'ratio', 'cellmesh')]
+    for i2, c2 in enumerate(result_cells):
+        for x in correct_cellmesh_results:
+            if c2 in x or x in c2:
+                index = cellmesh_to_index[x]
+                if cell_type_results[i, index] == 0:
+                    rr = 1.0/(i2+1)
+                    cell_type_results[i, index] = rr
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.figure(figsize=(10,10))
+plt.tight_layout()
+plt.cla()
+plt.clf()
+plt.gcf().subplots_adjust(bottom=0.3)
+plt.gcf().subplots_adjust(left=0.25)
+sns.set(style='whitegrid', font_scale=1.5)
+sns.heatmap(cell_type_results, xticklabels=correct_cellmesh_results, yticklabels=cells_to_include)
+plt.title('CellMesh results for immune cells')
+plt.xlabel('CellMesh terms')
+plt.ylabel('Tabula Muris cell type')
+plt.savefig('heatmap_tm_droplet.png', dpi=100)

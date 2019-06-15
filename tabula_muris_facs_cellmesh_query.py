@@ -72,8 +72,16 @@ with open('tm_facs_u_pvals.pkl', 'rb') as f:
 all_labels = np.loadtxt('tm_facs_all_labels.txt', dtype=str, delimiter='##')
 genes = np.loadtxt('tabula_muris_facs_genes.txt', dtype=str)
 
+# get gene names - save ranked genes for each cell type
+top_genes_ratio = {}
+for cell, cell_genes in scores_t.items():
+    top_genes_ratio[cell] = [genes[i[0]] for i in cell_genes]
+import pandas as pd
+top_genes_ratio = pd.DataFrame(top_genes_ratio)
+top_genes_ratio.to_csv('tabula_muris_facs_top_genes_ratio.csv')
 
 import cellmesh
+from cellmesh import prob_method, gsva_ext_method
 import cellmarker
 from mouse_cell_query import query_aggregation
 labels_set = set(all_labels)
@@ -81,7 +89,7 @@ label_results = {}
 label_cell_types = {}
 n_genes = [20, 50, 100, 200, 1000]
 gene_methods = ['ratio', 't', 'u']
-query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf', 'aggregate']
+query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva']# 'aggregate', 'aggregate_2']
 for label in labels_set:
     for n_gene in n_genes:
         for method in gene_methods:
@@ -105,13 +113,23 @@ for label in labels_set:
                 elif query_method == 'aggregate':
                     results = query_aggregation.cellmarker_cellmesh_hypergeometric_test(top_genes)
                     top_cells = [x[1] for x in results[1:]]
-                #label_results[(label, n_gene, method, query_method)] = results
+                elif query_method == 'aggregate_2':
+                    results = query_aggregation.cellmarker_cellmesh_tfidf_hypergeometric_test(top_genes)
+                    top_cells = [x[1] for x in results[1:]]
+                elif query_method == 'prob':
+                    results = prob_method.prob_test(top_genes)
+                    top_cells = [x[1] for x in results]
+                elif query_method == 'gsva':
+                    results = gsva_ext_method.gsva_ext_test(top_genes)
+                    top_cells = [x[1] for x in results]
+                label_results[(label, n_gene, method, query_method)] = [x[:-1] for x in results]
                 label_cell_types[(label, n_gene, method, query_method)] = top_cells
                 print(label, n_gene, method, query_method, top_cells[:10])
 
+
 import pickle
-#with open('tm_facs_cellmesh_query_results.pkl', 'wb') as f:
-#    pickle.dump(label_results, f)
+with open('tm_facs_cellmesh_query_results.pkl', 'wb') as f:
+    pickle.dump(label_results, f)
 with open('tm_facs_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
 
@@ -253,7 +271,7 @@ all_cell_types = sorted(list(set(map_cell_types.cell_type)))
 map_cell_types = map_cell_types.append(scQuery_results)
 map_cell_types_subset = map_cell_types[map_cell_types.gene_method=='ratio']
 sns.set(style='whitegrid', font_scale=1.0)
-fig, axes = plt.subplots(5, 15, figsize=(100, 20))
+fig, axes = plt.subplots(5, 15, figsize=(110, 20))
 for i, axes_1 in enumerate(axes):
     for j, ax in enumerate(axes_1):
         index = i*15 + j
@@ -273,7 +291,7 @@ map_method_means_subset = map_method_means[map_method_means.gene_method=='ratio'
 
 # plot performance of all methods
 sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=map_method_means_subset, ax=ax)
 plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
@@ -289,7 +307,7 @@ best_methods_no_cellmarker = cell_type_no_cellmarker.sort_values('mean_average_p
 new_mmm_subset = map_method_means[(map_method_means.gene_method=='ratio') & (map_method_means.n_genes==50)]
 
 sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=new_mmm_subset, ax=ax)
 plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
@@ -304,7 +322,7 @@ map_cell_types['top_10'] = [1 if x >= 0.1 else 0 for x in map_cell_types['mean_a
 map_cell_type_means = map_cell_types.groupby(['query_method', 'gene_method', 'n_genes']).mean().reset_index()
 # plot top-1, top-3, and top-5 accuracy
 sns.set(style='whitegrid', font_scale=1.5)
-fig, axes = plt.subplots(1, 4, figsize=(48, 10))
+fig, axes = plt.subplots(1, 4, figsize=(55, 10))
 categories = ['top_1', 'top_3', 'top_5', 'top_10'] 
 titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10'] 
 for i, ax in enumerate(axes):
@@ -313,13 +331,13 @@ for i, ax in enumerate(axes):
     g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i])) 
 plt.savefig('top_1_accuracy_tm_facs.png', dpi=100)
 
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-3 Accuracy')
 plt.savefig('top_3_accuracy_tm_facs.png', dpi=100)
 
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-5 Accuracy')
@@ -328,14 +346,15 @@ plt.savefig('top_5_accuracy_tm_facs.png', dpi=100)
 # only plot the top 5 accuracy at one particular gene count
 map_cell_type_means_subset = map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)]
 sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Tabula Muris FACS Cell Type Annotation Top-5 Accuracy')
 plt.savefig('top_5_accuracy_tm_facs_50_genes.png', dpi=100)
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Tabula Muris FACS Cell Type Annotation Top-3 Accuracy')
 plt.savefig('top_3_accuracy_tm_facs_50_genes.png', dpi=100)
 
+# TODO: create a heatmap?
