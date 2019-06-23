@@ -268,6 +268,10 @@ import seaborn as sns
 map_method_means = pd.read_csv('mca_coarse_MAP_method_means.csv')
 map_cell_types = pd.read_csv('mca_coarse_MAP_cell_types.csv')
 # load scQuery results
+scQuery_results = pd.read_csv('MAP_mca_scquery_cell_types.csv')
+map_cell_types = map_cell_types.append(scQuery_results)
+map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ratio', 'query_method': 'scquery', 'mean_average_precision': scQuery_results['mean_average_precision'].mean()}, ignore_index=True)
+
 
 # TODO: plot?
 # plot cellmarker, cellmesh, cellmesh_tfidf. fix gene_method='ratio', group by query_method, plot over all n_genes.

@@ -62,7 +62,7 @@ with open('tm_cell_onto_alternate_names.tsv') as f:
         if name in cell_types_alternate_map:
             cell_types_alternate_map[name].extend(alternate_cell_type_names)
 
-mca_cell_names_to_cellmarker = pd.read_tsv('mca_cell_names_to_cellmarker.tsv')
+mca_cell_names_to_cellmarker = pd.read_table('mca_cell_names_to_cellmarker.tsv')
 mca_cell_names_map = {}
 import cellmesh
 for i, row in mca_cell_names_to_cellmarker.iterrows():
@@ -102,10 +102,10 @@ for key, value in label_cell_types.items():
     name = key
     accuracies = []
     extended_accuracies = []
-    if name not in cell_types_map:
+    if name not in mca_cell_names_map:
         continue
     for v in value:
-        if v == cell_types_map[name] or v.lower() in name.lower() or name.lower() in v.lower():
+        if v in mca_cell_names_map[name] or v.lower() in name.lower() or name.lower() in v.lower():
             accuracies.append(1)
             extended_accuracies.append(1)
         else:
