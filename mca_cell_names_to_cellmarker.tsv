@@ -2,29 +2,29 @@ to_use	mca_cell_name	tabula_muris	cellmesh	cellmarker_cellonto	scquery
 	Abt cell				
 	Acinar cell	pancreatic acinar cell	Acinar Cells		
 	Adipocyte		Adipocytes		
-	Alveolar bipotent progenitor				Lung
+	Alveolar bipotent progenitor	type II pneumocyte			Lung
 	Alveolar macrophage	alveolar macrophage			
 	Antral mucous cell				
 	Astrocyte	astrocyte			
 	Astroglial cell	astrocyte			
-	At1 cell				
-	At2 cell				
+	At1 cell		Alveolar Epithelial Cells	Type I pneumocyte	Lung
+	At2 cell	type II pneumocyte			
 	Atrial cardiomyocyte	cardiac muscle cell			
 	Basal epithelial cell	epithelial cell			Skin Epidermis
 	Basophil	basophil			
 	B cell	B cell			
 	Brown adipose tissue			Brown fat cell	
 	Cardiac muscle cell	cardiac muscle cell			
-	Cartilage cell				Growth Plate Cartilage
+	Cartilage cell			Chondrocyte	Growth Plate Cartilage
 n	Cell in cell cycle				
-	Chondrocyte			Chondrocyte	
+	Chondrocyte			Chondrocyte	Growth Plate Cartilage
 	Choroid plexus epithelium	epithelial cell			Olfactory Epithelium
 	Ciliated cell	ciliated columnar cell of tracheobronchial tree			Olfactory Epithelium
-	Clara cell				
+	Clara cell		Alveolar Epithelial Cells		Lung
 	Columnar epithelium	ciliated columnar cell of tracheobronchial tree			Epithelium Of Small Intestine
 	Conventional dendritic cell	dendritic cell			
 	Cumulus cell				
-	Cxcl12-abundant reticular cell				
+	Cxcl12-abundant reticular cell	fibroblast			
 	Cycling cell				
 	Decidual stromal cell		Stromal Cells		
 	Dendritic cell	dendritic cell			
@@ -36,7 +36,7 @@ n	Dividing cell
 	Dividing dendritic cell	dendritic cell			
 	Dividing t cell	T cell			
 n	Dividng cell				
-	Dopaminergic neuron		Dopaminergic Neurons	Dopaminergic neuron	
+	Dopaminergic neuron		Dopaminergic Neurons	Dopaminergic neuron	Neural Cell
 	Dpt cell				
 	Ductal cell	duct epithelial cell 		Duct cell	Kidney Cell
 	Elongating spermatid		Spermatogonia		
@@ -45,7 +45,7 @@ n	Dividng cell
 	Endodermal cell				
 	Endothelial cell	endothelial cell			
 	Enteric muscle cell			Muscle cell	
-	Enterocyte progenitor				
+	Enterocyte progenitor	enterocyte of epithelium of large intestine			
 	Enteroendocrine	enteroendocrine cell			Endocrine Cell
 	Eosinophil granulocyte			Eosinophil	
 	Eosinophil			Eosinophil	
@@ -110,7 +110,7 @@ n	Dividng cell
 	Mesenchymal stem cell		Mesenchymal Stem Cells		
 	Mesenchymal stromal cell		Mesenchymal Stem Cells		
 	Metanephric mesenchyme				
-	Microglia			Microglial cell	
+	Microglia			Microglial cell	Macrophage
 	Monocyte			Monocyte	
 	Monocyte progenitor cell		Monocyte-Macrophage Precursor Cells		
 	Monocyte progenitor		Monocyte-Macrophage Precursor Cells		
@@ -136,11 +136,11 @@ n	Dividng cell
 	Oligodendrocyte precursor cell			Oligodendrocyte precursor cell	
 	Osteoblast			Osteoblast	Growth Plate Cartilage
 	Osteoclast			Osteoclast	
-	Ovarian surface epithelium cell			Epithelial cell	Olfactory Epithelium'
-	Ovarian vascular surface endothelium cell			Epithelial cell	Olfactory Epithelium'
+	Ovarian surface epithelium cell			Epithelial cell	Olfactory Epithelium
+	Ovarian vascular surface endothelium cell			Epithelial cell	Olfactory Epithelium
 	Paneth cell			Paneth cell	Epithelium Of Small Intestine
 	Pan-gabaergic			GABAergic neuron	Neural Cell
-	Parietal cell				
+	Parietal cell		Parietal Cells, Gastric		Stomach
 	Pe lineage cell				
 	Pericentral				
 	Periportal				
@@ -150,17 +150,17 @@ n	Dividng cell
 	Pluripotent stem cell				
 	Postmitotic neuron	neuron			Neural Cell
 	Preleptotene spermatogonia		Spermatogonia		
-	Premeiotic germ cell				
+	Premeiotic germ cell			Primordial germ cell	
 	Preosteoblast-osteoblast-bone cell-cartilage cell				Growth Plate Cartilage
 	Pre-pro b cell	Fraction A pre-pro B cell			
-	Pre-sertoli cell				
+	Pre-sertoli cell			Sertoli cell	
 	Pre t cell	immature T cell			T Cell
-	Primordial germ cell				
+	Primordial germ cell			Primordial germ cell	
 	Principal cells of cortical collecting duct	duct epithelial cell 			Kidney Cell
 	Proerythrocyte	erythrocyte			
 	Progenitor cell				
 	Progenitor trophoblast		Trophoblasts		Embryo
-	Proliferating thymocyte				
+	Proliferating thymocyte		Thymocytes		
 	Prostate gland cell				
 	Proximal renal tubule	epithelial cell of proximal tubule			Kidney Cell
 	Proximal tubule brush border cell	epithelial cell of proximal tubule			Kidney Cell
@@ -173,7 +173,7 @@ n	Reproductive tissue
 	S3 proximal tubule cell	epithelial cell of proximal tubule			Kidney Cell
 n	S cell				
 	Schwann cell			Schwann cell	
-	Sertoli cell				
+	Sertoli cell			Sertoli cell	Testis
 	Skeletal muscle cell		Muscle Fibers, Skeletal	Myotube	
 	Skeletal muscle		Muscle Fibers, Skeletal	Myotube	
 	Small luteal cell				
@@ -190,13 +190,13 @@ n	Stomach cell
 	Stromal cell	stromal cell			
 	T cell	T cell			T Cell
 	Tendon stem-progenitor cell				
-n	Th cell				
+	Th cell		T-Lymphocytes, Helper-Inducer		T Cell
 	Thecal cell				
 	Thick ascending limb of the loop of henle				Kidney Cell
 	Trophoblast progenitor		Trophoblasts		
 n	Ts				
 	Tuft cell			Brush cell (Tuft cell)	Olfactory Epithelium
-	Umbrella cell				
+	Umbrella cell	bladder urothelial cell			Olfactory Epithelium
 	Ureteric epithelium	bladder urothelial cell			Olfactory Epithelium
 	Urothelium	bladder urothelial cell			Olfactory Epithelium
 	Vascular endothelial cell	endothelial cell			

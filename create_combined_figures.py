@@ -47,8 +47,11 @@ mca_coarse_cell_types = mca_coarse_cell_types.append(mca_scQuery_results)
 # plot top-3 accuracy for ratio, 50 genes
 # cellmarker, cellmesh, prob, scquery
 tm_droplet_cell_types['top_3_accuracy'] = [1 if x > 0.3 else 0 for x in tm_droplet_cell_types['mean_average_precision']]
+tm_droplet_cell_types['top_1_accuracy'] = [1 if x > 0.6 else 0 for x in tm_droplet_cell_types['mean_average_precision']]
 tm_facs_cell_types['top_3_accuracy'] = [1 if x > 0.3 else 0 for x in tm_facs_cell_types['mean_average_precision']]
+tm_facs_cell_types['top_1_accuracy'] = [1 if x > 0.6 else 0 for x in tm_facs_cell_types['mean_average_precision']]
 mca_coarse_cell_types['top_3_accuracy'] = [1 if x > 0.3 else 0 for x in mca_coarse_cell_types['mean_average_precision']]
+mca_coarse_cell_types['top_1_accuracy'] = [1 if x > 0.6 else 0 for x in mca_coarse_cell_types['mean_average_precision']]
 
 # plot a grouped bar plot...
 tm_droplet_cell_types_means = tm_droplet_cell_types.groupby(['query_method', 'gene_method', 'n_genes']).mean().reset_index()
@@ -74,12 +77,32 @@ g = sns.categorical.barplot(x='query_method', y='top_3_accuracy', hue='dataset',
         ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-3 Accuracy')
-plt.savefig('top_3_accuracy_all_datasets.png', dpi=100)
+plt.savefig('top_3_accuracy_all_datasets_by_query_method.png', dpi=100)
+
+fig, ax = plt.subplots(figsize=(18, 10))
+g = sns.categorical.barplot(x='dataset', y='top_3_accuracy', hue='query_method',
+        data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio') & (all_datasets_cell_types_means.n_genes==50)],
+        ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-3 Accuracy')
+plt.savefig('top_3_accuracy_all_datasets_by_dataset.png', dpi=100)
+
+# TODO: create a line graph showing how performance changes with num genes
+
+plt.cla()
+sns.relplot(x='n_genes', y='top_3_accuracy', hue='query_method', style='query_method', col='dataset', kind='line',
+        markers=True,
+        data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio')],
+        linewidth=2)
+plt.ylim(0, 1.0)
+#plt.title('Cell Type Annotation Top-3 Accuracy')
+plt.savefig('top_3_accuracy_droplet_lineplot.png', dpi=100)
+
 
 
 
 
 
 # figure 4: Detailed analysis pipeline for UNCURL-App on tabula muris droplet
-# show:
+# plot a heatmap here
 
