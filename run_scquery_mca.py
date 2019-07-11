@@ -9,6 +9,7 @@ top_genes = pd.read_csv('mca_coarse_top_genes_ratio.csv', index_col=0)
 n_genes = 50
 
 # for all cell types...
+"""
 import scquery_selenium
 cell_types = top_genes.columns
 
@@ -28,6 +29,7 @@ for cell_type in cell_types:
 
 with open('mca_coarse_scquery_results.pkl', 'wb') as f:
     pickle.dump(cell_type_selenium_results, f)
+"""
 
 ###########################################################################################
 # TODO: calculate accuracies
@@ -72,16 +74,27 @@ for i, row in mca_cell_names_to_cellmarker.iterrows():
         alt_name = row['tabula_muris'].strip()
         mca_cell_names_map[cell_name] = cell_types_alternate_map[alt_name]
         mca_cell_names_map[cell_name].append(cell_types_map[alt_name])
-    elif isinstance(row['cellmarker_cellonto'], str):
+    if isinstance(row['cellmarker_cellonto'], str):
         alt_name = row['cellmarker_cellonto'].strip()
-        mca_cell_names_map[cell_name] = [alt_name]
+        try:
+            mca_cell_names_map[cell_name].append(alt_name)
+        except:
+            mca_cell_names_map[cell_name] = [alt_name]
         mca_cell_names_map[cell_name].extend([x[1] for x in cellmesh.cellonto_to_cellmesh(alt_name)])
-    elif isinstance(row['cellmesh'], str):
+    if isinstance(row['cellmesh'], str):
         alt_name = row['cellmesh'].strip()
-        mca_cell_names_map[cell_name] = [alt_name]
-        mca_cell_names_map[cell_name].extend([x[1] for x in cellmesh.cellonto_to_cellmesh(alt_name)])
-    else:
-        continue
+        try:
+            mca_cell_names_map[cell_name].append(alt_name)
+        except:
+            mca_cell_names_map[cell_name] = [alt_name]
+        mca_cell_names_map[cell_name].extend([x[1] for x in cellmesh.cellmesh_to_cellonto(alt_name)])
+    if isinstance(row['scquery'], str):
+        alt_name = row['scquery'].strip()
+        try:
+            mca_cell_names_map[cell_name].append(alt_name)
+        except:
+            mca_cell_names_map[cell_name] = [alt_name]
+
 
 # append names to alternate_map
 with open('tm_to_scquery.tsv') as f:
@@ -110,9 +123,14 @@ for key, value in label_cell_types.items():
             extended_accuracies.append(1)
         else:
             accuracies.append(0)
-            if v in mca_cell_names_map[name]:
-                extended_accuracies.append(0.5)
-            else:
+            has_index = False
+            for x in mca_cell_names_map[name]:
+                if not isinstance(x, str):
+                    continue
+                if v in x:
+                    extended_accuracies.append(0.5)
+                    has_index = True
+            if not has_index:
                 extended_accuracies.append(0)
     label_accuracies[key] = accuracies
     label_extended_accuracies[key] = extended_accuracies

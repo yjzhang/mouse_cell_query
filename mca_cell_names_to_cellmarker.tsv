@@ -1,24 +1,24 @@
 to_use	mca_cell_name	tabula_muris	cellmesh	cellmarker_cellonto	scquery
 	Abt cell				
-	Acinar cell	pancreatic acinar cell	Acinar Cells		
+	Acinar cell	pancreatic acinar cell	Acinar Cells		Pancreas
 	Adipocyte		Adipocytes		
 	Alveolar bipotent progenitor	type II pneumocyte			Lung
-	Alveolar macrophage	alveolar macrophage			
+	Alveolar macrophage	alveolar macrophage			Macrophage
 	Antral mucous cell				
-	Astrocyte	astrocyte			
-	Astroglial cell	astrocyte			
+	Astrocyte	astrocyte			Brain
+	Astroglial cell	astrocyte			Brain
 	At1 cell		Alveolar Epithelial Cells	Type I pneumocyte	Lung
-	At2 cell	type II pneumocyte			
+	At2 cell	type II pneumocyte			Lung
 	Atrial cardiomyocyte	cardiac muscle cell			
 	Basal epithelial cell	epithelial cell			Skin Epidermis
-	Basophil	basophil			
+	Basophil	basophil			Myeloid Cell
 	B cell	B cell			
 	Brown adipose tissue			Brown fat cell	
 	Cardiac muscle cell	cardiac muscle cell			
 	Cartilage cell			Chondrocyte	Growth Plate Cartilage
 n	Cell in cell cycle				
 	Chondrocyte			Chondrocyte	Growth Plate Cartilage
-	Choroid plexus epithelium	epithelial cell			Olfactory Epithelium
+	Choroid plexus epithelium	epithelial cell			Epithelium
 	Ciliated cell	ciliated columnar cell of tracheobronchial tree			Olfactory Epithelium
 	Clara cell		Alveolar Epithelial Cells		Lung
 	Columnar epithelium	ciliated columnar cell of tracheobronchial tree			Epithelium Of Small Intestine
@@ -44,20 +44,20 @@ n	Dividng cell
 	Endocrine progenitor cell			Endocrine cell	Endocrine Cell
 	Endodermal cell				
 	Endothelial cell	endothelial cell			
-	Enteric muscle cell			Muscle cell	
-	Enterocyte progenitor	enterocyte of epithelium of large intestine			
+	Enteric muscle cell			Muscle cell	Epithelium
+	Enterocyte progenitor	enterocyte of epithelium of large intestine			Epithelium
 	Enteroendocrine	enteroendocrine cell			Endocrine Cell
-	Eosinophil granulocyte			Eosinophil	
-	Eosinophil			Eosinophil	
-	Eosinophil progenitor cell			Eosinophil	
+	Eosinophil granulocyte			Eosinophil	Myeloid Cell
+	Eosinophil			Eosinophil	Myeloid Cell
+	Eosinophil progenitor cell			Eosinophil	Myeloid Cell
 	Ependymal cell			Ependymal cell	
-	Epithelia cell	epithelial cell			Olfactory Epithelium
-	Epithelial cell	epithelial cell			Epithelium Of Small Intestine
+	Epithelia cell	epithelial cell			Epithelium
+	Epithelial cell	epithelial cell			Epithelium
 	Epithelium of small intestinal villi	epithelial cell			Epithelium Of Small Intestine
-	Erythroblast	erythroblast			
-	Erythrocyte	erythrocyte			
-	Erythrocyte progenitor	erythroblast			
-	Erythroid cell	erythroblast			
+	Erythroblast	erythroblast			Blood Cell
+	Erythrocyte	erythrocyte			Blood Cell
+	Erythrocyte progenitor	erythroblast			Blood Cell
+	Erythroid cell	erythroblast			Blood Cell
 	Es		Embryonic Stem Cells		
 	Female fetal gonad cell				Female Gonad
 	Fenestrated endothelial cell	endothelial cell			
@@ -73,9 +73,9 @@ n	Dividng cell
 	Glomerular epithelial cell	epithelial cell			Kidney Cell
 	Glomerular podocytes cell			Podocyte	Kidney Cell
 	Granule neuron	neuron			
-	Granulocyte monocyte progenitor cell	granulocyte monocyte progenitor cell			
-	Granulocyte monocyte progenitor	granulocyte monocyte progenitor cell			
-	Granulocyte	granulocyte			
+	Granulocyte monocyte progenitor cell	granulocyte monocyte progenitor cell			Myeloid Cell
+	Granulocyte monocyte progenitor	granulocyte monocyte progenitor cell			Myeloid Cell
+	Granulocyte	granulocyte			Myeloid Cell
 	Granulosa cell			Granulosa cell	
 	Hematopoietic stem progenitor cell	hematopoietic precursor cell			Hematopoietic Stem Cell
 	Hepatocyte-like cell	hepatocyte			Liver
@@ -111,11 +111,11 @@ n	Dividng cell
 	Mesenchymal stromal cell		Mesenchymal Stem Cells		
 	Metanephric mesenchyme				
 	Microglia			Microglial cell	Macrophage
-	Monocyte			Monocyte	
-	Monocyte progenitor cell		Monocyte-Macrophage Precursor Cells		
-	Monocyte progenitor		Monocyte-Macrophage Precursor Cells		
+	Monocyte			Monocyte	Myeloid Cell
+	Monocyte progenitor cell		Monocyte-Macrophage Precursor Cells		Myeloid Cell
+	Monocyte progenitor		Monocyte-Macrophage Precursor Cells		Myeloid Cell
 	Msc		Mesenchymal Stem Cells		
-	Multiciliated epithelial cell			Ciliated cell	Epithelium Of Small Intestine
+	Multiciliated epithelial cell			Ciliated cell	Epithelium
 	Multipotent progenitor			Multipotent stem cell	Hematopoietic Stem Cell
 	Muscle cell			Muscle cell	
 	Muscle			Muscle cell	
@@ -127,17 +127,17 @@ n	Dividng cell
 	Neuronal progenitor		Neural Stem Cells		Neural Cell
 	Neuron	neuron			Neural Cell
 	Neutrophil granulocyte		Neutrophils		
-	Neutrophil		Neutrophils		
-	Neutrophil progenitor		Neutrophils		
+	Neutrophil		Neutrophils		Myeloid Cell
+	Neutrophil progenitor		Neutrophils		Myeloid Cell
 	Nk cell	natural killer cell			
 	Nkt cell		Natural Killer T-Cells		T Cell
 	Nuocyte				
 	Oligodendrocyte			Oligodendrocyte	
 	Oligodendrocyte precursor cell			Oligodendrocyte precursor cell	
-	Osteoblast			Osteoblast	Growth Plate Cartilage
-	Osteoclast			Osteoclast	
-	Ovarian surface epithelium cell			Epithelial cell	Olfactory Epithelium
-	Ovarian vascular surface endothelium cell			Epithelial cell	Olfactory Epithelium
+	Osteoblast			Osteoblast	Osteocyte
+	Osteoclast			Osteoclast	Macrophage
+	Ovarian surface epithelium cell			Epithelial cell	Epithelium
+	Ovarian vascular surface endothelium cell			Epithelial cell	
 	Paneth cell			Paneth cell	Epithelium Of Small Intestine
 	Pan-gabaergic			GABAergic neuron	Neural Cell
 	Parietal cell		Parietal Cells, Gastric		Stomach
@@ -195,11 +195,11 @@ n	Stomach cell
 	Thick ascending limb of the loop of henle				Kidney Cell
 	Trophoblast progenitor		Trophoblasts		
 n	Ts				
-	Tuft cell			Brush cell (Tuft cell)	Olfactory Epithelium
-	Umbrella cell	bladder urothelial cell			Olfactory Epithelium
-	Ureteric epithelium	bladder urothelial cell			Olfactory Epithelium
-	Urothelium	bladder urothelial cell			Olfactory Epithelium
+	Tuft cell			Brush cell (Tuft cell)	Epithelium
+	Umbrella cell	bladder urothelial cell			Epithelium
+	Ureteric epithelium	bladder urothelial cell			Epithelium
+	Urothelium	bladder urothelial cell			Epithelium
 	Vascular endothelial cell	endothelial cell			
 	Vascular smooth muscle progenitor cell				
 	Ventricle cardiomyocyte	cardiac muscle cell			
-	Β-cell	B cell			
+	Β-cell	type B pancreatic cell			

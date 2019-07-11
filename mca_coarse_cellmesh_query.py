@@ -58,9 +58,9 @@ with open('mca_coarse_t_pvals.pkl', 'wb') as f:
 
 """
 ###########################################################################################
-
 # 3. for each cluster, run cellmesh and cellmarker
 
+"""
 with open('mca_coarse_t_scores.pkl', 'rb') as f:
     scores_t = pickle.load(f)
 with open('mca_coarse_t_pvals.pkl', 'rb') as f:
@@ -122,9 +122,11 @@ with open('mca_coarse_cellmesh_query_results.pkl', 'wb') as f:
 with open('mca_coarse_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
 
+"""
 
 ############################################################################################
 
+import pandas as pd
 with open('mca_coarse_cellmesh_query_top_cells.pkl', 'rb') as f:
     label_cell_types = pickle.load(f)
 
@@ -155,7 +157,7 @@ with open('tm_cell_onto_alternate_names.tsv') as f:
         if name in cell_types_alternate_map:
             cell_types_alternate_map[name].extend(alternate_cell_type_names)
 
-mca_cell_names_to_cellmarker = pd.read_tsv('mca_cell_names_to_cellmarker.tsv')
+mca_cell_names_to_cellmarker = pd.read_table('mca_cell_names_to_cellmarker.tsv')
 mca_cell_names_map = {}
 import cellmesh
 for i, row in mca_cell_names_to_cellmarker.iterrows():
@@ -165,16 +167,20 @@ for i, row in mca_cell_names_to_cellmarker.iterrows():
         alt_name = row['tabula_muris'].strip()
         mca_cell_names_map[cell_name] = cell_types_alternate_map[alt_name]
         mca_cell_names_map[cell_name].append(cell_types_map[alt_name])
-    elif isinstance(row['cellmarker_cellonto'], str):
+    if isinstance(row['cellmarker_cellonto'], str):
         alt_name = row['cellmarker_cellonto'].strip()
-        mca_cell_names_map[cell_name] = [alt_name]
+        try:
+            mca_cell_names_map[cell_name].append(alt_name)
+        except:
+            mca_cell_names_map[cell_name] = [alt_name]
         mca_cell_names_map[cell_name].extend([x[1] for x in cellmesh.cellonto_to_cellmesh(alt_name)])
-    elif isinstance(row['cellmesh'], str):
+    if isinstance(row['cellmesh'], str):
         alt_name = row['cellmesh'].strip()
-        mca_cell_names_map[cell_name] = [alt_name]
+        try:
+            mca_cell_names_map[cell_name].append(alt_name)
+        except:
+            mca_cell_names_map[cell_name] = [alt_name]
         mca_cell_names_map[cell_name].extend([x[1] for x in cellmesh.cellonto_to_cellmesh(alt_name)])
-    else:
-        continue
 
 # TODO: calculate accuracy of each label list
 label_accuracies = {}

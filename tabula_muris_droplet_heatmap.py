@@ -59,17 +59,18 @@ with open('cell_ontology_to_cellmesh_tabula_muris.tsv') as f:
             cell_types_map[name] = primary_cellmesh_name
             cell_types_alternate_map[name] = alternate_cellmesh_names
 correct_cellmesh_results = list(set([cell_types_map[x] for x in cells_to_include]))
-cellmesh_to_index = {c: i for i, c in enumerate(correct_cellmesh_results)}
 actual_cellmesh_results = [label_cell_types[(c, 50, 'ratio', 'cellmesh')][0] for c in cells_to_include]
+all_cellmesh_results = list(set(correct_cellmesh_results).union(actual_cellmesh_results))
+cellmesh_to_index = {c: i for i, c in enumerate(all_cellmesh_results)}
 
 
 # create a heatmap
 import numpy as np
-cell_type_results = np.zeros((len(cells_to_include), len(correct_cellmesh_results)))
+cell_type_results = np.zeros((len(cells_to_include), len(all_cellmesh_results)))
 for i, c in enumerate(cells_to_include):
-    result_cells = label_cell_types[(c, 50, 'ratio', 'cellmesh')]
+    result_cells = label_cell_types[(c, 50, 'ratio', 'prob')]
     for i2, c2 in enumerate(result_cells):
-        for x in correct_cellmesh_results:
+        for x in all_cellmesh_results:
             if c2 == x:
                 index = cellmesh_to_index[x]
                 if cell_type_results[i, index] == 0:
@@ -87,8 +88,13 @@ row_order = np.argsort(row_labels)
 col_order = np.argsort(column_labels)
 cell_type_results_reordered = cell_type_results[row_order, :]
 cell_type_results_reordered = cell_type_results_reordered[:, col_order]
+# TODO: save reordered columns?
 tm_labels = np.array(cells_to_include)[row_order]
-cellmesh_labels = np.array(correct_cellmesh_results)[col_order]
+cellmesh_labels = np.array(all_cellmesh_results)[col_order]
+np.savetxt('tm_droplet_labels_ordered_heatmap.txt', tm_labels, fmt='%s')
+np.savetxt('cellmesh_labels_ordered_heatmap.txt', cellmesh_labels, fmt='%s')
+
+# TODO: load/edit re-ordered columns?
 
 
 plt.figure(figsize=(51,51))
@@ -99,7 +105,7 @@ plt.gcf().subplots_adjust(bottom=0.2)
 plt.gcf().subplots_adjust(left=0.2)
 sns.set(style='whitegrid', font_scale=2.0)
 sns.heatmap(cell_type_results_reordered, xticklabels=cellmesh_labels, yticklabels=tm_labels, linewidths=.5)
-plt.title('CellMesh results for immune cells')
+plt.title('CellMesh results for prob method')
 plt.xlabel('CellMesh terms')
 plt.ylabel('Tabula Muris cell type')
 plt.savefig('heatmap_tm_droplet_all_cell_types.png', dpi=100)

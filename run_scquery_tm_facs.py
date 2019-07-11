@@ -3,7 +3,7 @@
 # 1. get top genes
 import pickle
 import numpy as np
-
+"""
 genes = np.loadtxt('tabula_muris_facs_genes.txt', dtype=str)
 with open('tm_facs_t_scores.pkl', 'rb') as f:
     scores_t = pickle.load(f)
@@ -31,6 +31,7 @@ for cell_type, gene_set in cell_type_genes.items():
 
 with open('tm_facs_scquery_results.pkl', 'wb') as f:
     pickle.dump(cell_type_selenium_results, f)
+"""
 
 ###########################################################################################
 # TODO: calculate accuracies
@@ -87,9 +88,14 @@ for key, value in label_cell_types.items():
             extended_accuracies.append(1)
         else:
             accuracies.append(0)
-            if v in cell_types_alternate_map[name]:
-                extended_accuracies.append(0.5)
-            else:
+            has_index = False
+            for x in cell_types_alternate_map[name]:
+                if not isinstance(x, str):
+                    continue
+                if v in x:
+                    extended_accuracies.append(0.5)
+                    has_index = True
+            if not has_index:
                 extended_accuracies.append(0)
     label_accuracies[key] = accuracies
     label_extended_accuracies[key] = extended_accuracies

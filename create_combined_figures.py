@@ -79,6 +79,15 @@ plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-3 Accuracy')
 plt.savefig('top_3_accuracy_all_datasets_by_query_method.png', dpi=100)
 
+sns.set(style='whitegrid', font_scale=1.7)
+fig, ax = plt.subplots(figsize=(18, 10))
+g = sns.categorical.barplot(x='query_method', y='top_1_accuracy', hue='dataset',
+        data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio') & (all_datasets_cell_types_means.n_genes==50)],
+        ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-1 Accuracy')
+plt.savefig('top_1_accuracy_all_datasets_by_query_method.png', dpi=100)
+
 fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='dataset', y='top_3_accuracy', hue='query_method',
         data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio') & (all_datasets_cell_types_means.n_genes==50)],
@@ -87,7 +96,16 @@ plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-3 Accuracy')
 plt.savefig('top_3_accuracy_all_datasets_by_dataset.png', dpi=100)
 
-# TODO: create a line graph showing how performance changes with num genes
+fig, ax = plt.subplots(figsize=(18, 10))
+g = sns.categorical.barplot(x='dataset', y='top_1_accuracy', hue='query_method',
+        data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio') & (all_datasets_cell_types_means.n_genes==50)],
+        ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-1 Accuracy')
+plt.savefig('top_1_accuracy_all_datasets_by_dataset.png', dpi=100)
+
+
+# create a line graph showing how performance changes with num genes
 
 plt.cla()
 sns.relplot(x='n_genes', y='top_3_accuracy', hue='query_method', style='query_method', col='dataset', kind='line',
@@ -98,6 +116,14 @@ plt.ylim(0, 1.0)
 #plt.title('Cell Type Annotation Top-3 Accuracy')
 plt.savefig('top_3_accuracy_droplet_lineplot.png', dpi=100)
 
+plt.cla()
+sns.relplot(x='n_genes', y='top_1_accuracy', hue='query_method', style='query_method', col='dataset', kind='line',
+        markers=True,
+        data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio')],
+        linewidth=2)
+plt.ylim(0, 1.0)
+#plt.title('Cell Type Annotation Top-3 Accuracy')
+plt.savefig('top_1_accuracy_droplet_lineplot.png', dpi=100)
 
 
 
