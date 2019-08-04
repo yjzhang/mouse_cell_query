@@ -70,7 +70,7 @@ included_methods = ['cellmarker_hypergeom', 'cellmesh_hypergeom', 'cellmesh_prob
 all_datasets_cell_types_means = all_datasets_cell_types_means[all_datasets_cell_types_means.query_method.isin(included_methods)]
 
 
-sns.set(style='whitegrid', font_scale=1.7)
+sns.set(style='whitegrid', font_scale=2.5)
 fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_3_accuracy', hue='dataset',
         data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio') & (all_datasets_cell_types_means.n_genes==50)],
@@ -79,7 +79,7 @@ plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-3 Accuracy')
 plt.savefig('top_3_accuracy_all_datasets_by_query_method.png', dpi=100)
 
-sns.set(style='whitegrid', font_scale=1.7)
+sns.set(style='whitegrid', font_scale=2.5)
 fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_1_accuracy', hue='dataset',
         data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio') & (all_datasets_cell_types_means.n_genes==50)],
@@ -88,42 +88,51 @@ plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-1 Accuracy')
 plt.savefig('top_1_accuracy_all_datasets_by_query_method.png', dpi=100)
 
+sns.set(style='whitegrid', font_scale=2.5)
 fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='dataset', y='top_3_accuracy', hue='query_method',
         data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio') & (all_datasets_cell_types_means.n_genes==50)],
         ax=ax)
+g.legend_.remove()
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-3 Accuracy')
-plt.savefig('top_3_accuracy_all_datasets_by_dataset.png', dpi=100)
+#plt.savefig('top_3_accuracy_all_datasets_by_dataset.png', dpi=100)
+plt.savefig('figure3b_top_3.png', dpi=100)
 
+sns.set(style='whitegrid', font_scale=2.5)
 fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='dataset', y='top_1_accuracy', hue='query_method',
         data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio') & (all_datasets_cell_types_means.n_genes==50)],
         ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-1 Accuracy')
-plt.savefig('top_1_accuracy_all_datasets_by_dataset.png', dpi=100)
+#plt.savefig('top_1_accuracy_all_datasets_by_dataset.png', dpi=100)
+plt.savefig('figure3b_top_1.png', dpi=100)
 
 
 # create a line graph showing how performance changes with num genes
 
 plt.cla()
+sns.set(style='whitegrid', font_scale=1.7)
 sns.relplot(x='n_genes', y='top_3_accuracy', hue='query_method', style='query_method', col='dataset', kind='line',
         markers=True,
         data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio')],
-        linewidth=2)
+        linewidth=3, legend=False)
 plt.ylim(0, 1.0)
 #plt.title('Cell Type Annotation Top-3 Accuracy')
-plt.savefig('top_3_accuracy_droplet_lineplot.png', dpi=100)
+#plt.savefig('top_3_accuracy_droplet_lineplot.png', dpi=100)
+plt.savefig('figure3b_line_top_3.png', dpi=100)
 
 plt.cla()
+sns.set(style='whitegrid', font_scale=1.7)
 sns.relplot(x='n_genes', y='top_1_accuracy', hue='query_method', style='query_method', col='dataset', kind='line',
         markers=True,
         data=all_datasets_cell_types_means[(all_datasets_cell_types_means.gene_method=='ratio')],
-        linewidth=2)
+        linewidth=3)
 plt.ylim(0, 1.0)
 #plt.title('Cell Type Annotation Top-3 Accuracy')
-plt.savefig('top_1_accuracy_droplet_lineplot.png', dpi=100)
+#plt.savefig('top_1_accuracy_droplet_lineplot.png', dpi=100)
+plt.savefig('figure3b_line_top_1.png', dpi=100)
 
 
 
