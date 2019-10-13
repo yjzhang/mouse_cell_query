@@ -7,9 +7,22 @@ from keras.layers import Dense
 import numpy as np
 from scipy import sparse
 
+
+def data_preprocess_csc(data, normalize_counts=True, log_transform=True, **params):
+    """
+    run data preprocessing
+    """
+    from uncurl import preprocessing
+    if normalize_counts:
+        data = preprocessing.cell_normalize(data)
+    if log_transform:
+        data = preprocessing.log1p(data)
+    return data
+
 def sparse_batch_iterator(data, labels, batch_size=50, shuffle=True):
     """
     batch iterator for sparse matrices. Converts data to dense matrix.
+    This returns an iterator over data, labels.
     see: https://stackoverflow.com/questions/37609892/keras-sparse-matrix-issue
     """
     n_batches = int(np.ceil(data.shape[0]/batch_size))
@@ -34,6 +47,7 @@ def sparse_batch_iterator(data, labels, batch_size=50, shuffle=True):
 def sparse_batch_data_iterator(data, batch_size=50, shuffle=True):
     """
     batch iterator for sparse matrices. Converts data to dense matrix.
+    This returns an iterator over the data.
     see: https://stackoverflow.com/questions/37609892/keras-sparse-matrix-issue
     """
     n_batches = int(np.ceil(data.shape[0]/batch_size))
@@ -56,9 +70,10 @@ def sparse_batch_data_iterator(data, batch_size=50, shuffle=True):
 
 class Classifier(object):
 
-    def __init__(self, gene_list, num_classes, model=None, layers=None):
+    def __init__(self, gene_list, num_classes, class_names=None, model=None, layers=None):
         # TODO: layer parameters
         self.genes = gene_list
+        self.class_names = class_names
         if model is not None:
             self.model = model
             self.model.compile(optimizer='adam',
@@ -85,11 +100,14 @@ class Classifier(object):
             labels (array or list): cell labels - should be ints.
         """
         # TODO: validation set?
-        if sparse.issparse(validation_data):
-            validation_iterator = sparse_batch_iterator(validation_data, validation_labels, batch_size=batch_size)
         if sparse.issparse(data):
             iterator = sparse_batch_iterator(data, labels, batch_size=batch_size)
-            self.model.fit_generator(iterator, steps_per_epoch=int(np.ceil(data.shape[0]/batch_size)), epochs=n_epochs)
+            if sparse.issparse(validation_data):
+                validation_iterator = sparse_batch_iterator(validation_data, validation_labels, batch_size=batch_size)
+                self.model.fit_generator(iterator, steps_per_epoch=int(np.ceil(data.shape[0]/batch_size)), epochs=n_epochs,
+                        validation_data=validation_iterator)
+            else:
+                self.model.fit_generator(iterator, steps_per_epoch=int(np.ceil(data.shape[0]/batch_size)), epochs=n_epochs)
         else:
             self.model.fit(data, labels, epochs=n_epochs)
 
@@ -100,7 +118,7 @@ class Classifier(object):
             genes: array or list of strings
 
         Returns:
-            model prediction for all cells
+            model prediction for all cells - array of shape (cells, classes) of real values
         """
         # map data gene set onto classifier gene set
         genes = list(map(lambda x: x.upper(), genes))
@@ -123,6 +141,14 @@ class Classifier(object):
             results = self.model.predict(data)
         return results
 
+    def results_to_labels(self, results):
+        """
+        Converts results array to list of cell type labels
+        """
+        labels = results.argmax(1)
+        cell_labels = np.array([self.class_names[i] for i in labels])
+        return cell_labels
+
     def save(self, model_filename, genes_filename=None):
         """
         save to filename - model_filename should be an h5 file.
@@ -131,6 +157,8 @@ class Classifier(object):
         if genes_filename is None:
             genes_filename = model_filename.split('.')[0] + '_genes.txt'
         np.savetxt(genes_filename, self.genes, fmt='%s')
+        class_filename = model_filename.split('.')[0] + '_classes.txt'
+        np.savetxt(class_filename, self.class_names, fmt='%s')
 
     @classmethod
     def load_from_file(cls, model_filename, genes_filename=None):
@@ -139,8 +167,15 @@ class Classifier(object):
         if genes_filename is None:
             genes_filename = model_filename.split('.')[0] + '_genes.txt'
         genes = np.loadtxt(genes_filename, dtype=str, delimiter='##')
-        classifier = Classifier(genes, 0, model=model)
+        class_filename = model_filename.split('.')[0] + '_classes.txt'
+        try:
+            class_names = np.loadtxt(class_filename, dtype=str, delimiter='##')
+        except:
+            class_names = None
+        classifier = Classifier(genes, 0, model=model, class_names=class_names)
         return classifier
+
+
 
 class ClassifierAutoencoder(object):
 
@@ -202,7 +237,7 @@ class ClassifierAutoencoder(object):
         for i, gene in enumerate(genes):
             if gene in model_gene_index:
                 genes_map[model_gene_index[gene]] = i
-        print(genes_map)
+        print('genes_map:', genes_map)
         data_new = data[:, genes_map]
         data_new[:, zero_genes] = 0
         if sparse.issparse(data_new):

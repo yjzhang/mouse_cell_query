@@ -66,7 +66,8 @@ all_datasets_cell_types_means = pd.concat([tm_droplet_cell_types_means, tm_facs_
 all_datasets_cell_types_means.replace('cellmarker', 'cellmarker_hypergeom', inplace=True)
 all_datasets_cell_types_means.replace('cellmesh', 'cellmesh_hypergeom', inplace=True)
 all_datasets_cell_types_means.replace('prob', 'cellmesh_prob', inplace=True)
-included_methods = ['cellmarker_hypergeom', 'cellmesh_hypergeom', 'cellmesh_prob', 'scquery']
+all_datasets_cell_types_means.replace('gsva', 'cellmesh_gsva', inplace=True)
+included_methods = ['scquery', 'cellmarker_hypergeom', 'cellmesh_hypergeom', 'cellmesh_gsva', 'cellmesh_prob']
 all_datasets_cell_types_means = all_datasets_cell_types_means[all_datasets_cell_types_means.query_method.isin(included_methods)]
 
 
