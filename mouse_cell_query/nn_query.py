@@ -175,6 +175,34 @@ class Classifier(object):
         classifier = Classifier(genes, 0, model=model, class_names=class_names)
         return classifier
 
+import os
+PATH = os.path.dirname(__file__)
+DEFAULT_MODEL_PATH = os.path.join(PATH, 'models', 'tm_combined_model_200_200.h5')
+LOADED_MODEL = None
+
+def predict_using_default_classifier(data, genes, model_filename=None):
+    """
+    Returns cell type names using a default classifier model.
+
+    Args:
+        data (array): dense array of shape (cells, genes)
+        genes: array or list of strings
+
+    Returns:
+        cell_names, cell_probs, cell_name_indices
+    """
+    model_filename = DEFAULT_MODEL_PATH if model_filename is None else model_filename
+    global LOADED_MODEL
+    LOADED_MODEL = Classifier.load_from_file(model_filename)
+    results = LOADED_MODEL.predict(data, genes)
+    cell_names = LOADED_MODEL.results_to_labels(results)
+    return cell_names, results, LOADED_MODEL.class_names
+
+
+
+
+
+
 
 
 class ClassifierAutoencoder(object):
