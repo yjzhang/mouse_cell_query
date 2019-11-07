@@ -4,12 +4,14 @@
 
 # 1. load data
 # start with droplet data
+import os
+import random
 
 import numpy as np
 import scipy.io
 from scipy import sparse
-import os
 import pickle
+
 """
 path = 'tabula_muris/cell_type_matrices'
 all_matrices = []
@@ -86,48 +88,56 @@ labels_set = set(all_labels)
 label_results = {}
 label_cell_types = {}
 n_genes = [20, 50, 100, 200, 1000]
-gene_methods = ['ratio', 't', 'u']
-query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva']#, 'aggregate', 'aggregate_2']
+gene_methods = ['ratio']#, 't', 'u']
+query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva', 'random_mesh']#, 'aggregate', 'aggregate_2']
+all_species = ['human', 'mouse', 'both']
+all_mesh_cell_id_names = cellmesh.get_all_cell_id_names(include_cell_components=False)
+all_mesh_terms = [x[1] for x in all_mesh_cell_id_names]
 for label in labels_set:
     for n_gene in n_genes:
         for method in gene_methods:
             for query_method in query_methods:
-                if method == 'ratio':
-                    top_genes = [genes[x[0]] for x in scores_t[label][:n_gene]]
-                elif method == 't':
-                    top_genes = [genes[x[0]] for x in pvals_t[label][:n_gene]]
-                elif method == 'u':
-                    top_genes = [genes[x[0]] for x in pvals_u[label][:n_gene]]
-                top_genes = [x.upper() for x in top_genes]
-                if query_method == 'cellmarker':
-                    results = cellmarker.hypergeometric_test(top_genes)
-                    top_cells = [x[0] for x in results]
-                elif query_method == 'cellmesh':
-                    results = cellmesh.hypergeometric_test(top_genes)
-                    top_cells = [x[1] for x in results]
-                elif query_method == 'cellmesh_tfidf':
-                    results = cellmesh.normed_hypergeometric_test(top_genes)
-                    top_cells = [x[1] for x in results]
-                elif query_method == 'aggregate':
-                    results = query_aggregation.cellmarker_cellmesh_hypergeometric_test(top_genes)
-                    top_cells = [x[1] for x in results[1:]]
-                    results = results[1:]
-                elif query_method == 'aggregate_2':
-                    results = query_aggregation.cellmarker_cellmesh_tfidf_hypergeometric_test(top_genes)
-                    top_cells = [x[1] for x in results[1:]]
-                    results = results[1:]
-                elif query_method == 'prob':
-                    results = prob_method.prob_test(top_genes)
-                    top_cells = [x[1] for x in results]
-                elif query_method == 'gsva':
-                    results = gsva_ext_method.gsva_ext_test(top_genes)
-                    top_cells = [x[1] for x in results]
-                label_results[(label, n_gene, method, query_method)] = [x[:-1] for x in results]
-                label_cell_types[(label, n_gene, method, query_method)] = top_cells
-                print(label, n_gene, method, query_method, top_cells[:10])
+                for species in all_species:
+                    if method == 'ratio':
+                        top_genes = [genes[x[0]] for x in scores_t[label][:n_gene]]
+                    elif method == 't':
+                        top_genes = [genes[x[0]] for x in pvals_t[label][:n_gene]]
+                    elif method == 'u':
+                        top_genes = [genes[x[0]] for x in pvals_u[label][:n_gene]]
+                    top_genes = [x.upper() for x in top_genes]
+                    if query_method == 'cellmarker':
+                        results = cellmarker.hypergeometric_test(top_genes, species=species)
+                        top_cells = [x[0] for x in results]
+                    elif query_method == 'cellmesh':
+                        results = cellmesh.hypergeometric_test(top_genes, species=species)
+                        top_cells = [x[1] for x in results]
+                    elif query_method == 'cellmesh_tfidf':
+                        results = cellmesh.normed_hypergeometric_test(top_genes, species=species)
+                        top_cells = [x[1] for x in results]
+                    elif query_method == 'aggregate':
+                        results = query_aggregation.cellmarker_cellmesh_hypergeometric_test(top_genes)
+                        top_cells = [x[1] for x in results[1:]]
+                        results = results[1:]
+                    elif query_method == 'aggregate_2':
+                        results = query_aggregation.cellmarker_cellmesh_tfidf_hypergeometric_test(top_genes)
+                        top_cells = [x[1] for x in results[1:]]
+                        results = results[1:]
+                    elif query_method == 'prob':
+                        results = prob_method.prob_test(top_genes, species=species)
+                        top_cells = [x[1] for x in results]
+                    elif query_method == 'gsva':
+                        results = gsva_ext_method.gsva_ext_test(top_genes, species=species)
+                        top_cells = [x[1] for x in results]
+                    elif query_method == 'random_mesh':
+                        # select a random MeSH term
+                        top_cells = random.sample(all_mesh_terms, 10)
+                        results = top_cells
+                    #label_results[(label, n_gene, method, query_method, species)] = [x[:-1] for x in results]
+                    label_cell_types[(label, n_gene, method, query_method, species)] = top_cells
+                    print(label, n_gene, method, query_method, species, top_cells[:10])
 
-with open('tm_droplet_cellmesh_query_results.pkl', 'wb') as f:
-    pickle.dump(label_results, f)
+#with open('tm_droplet_cellmesh_query_results.pkl', 'wb') as f:
+#    pickle.dump(label_results, f)
 with open('tm_droplet_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
 
@@ -235,16 +245,16 @@ import pandas as pd
 
 map_list = [key + (v,) for key, v in map_method_means.items()]
 map_list.sort()
-map_method_means = pd.DataFrame(map_list, columns=['n_genes',  'gene_method', 'query_method', 'mean_average_precision'])
+map_method_means = pd.DataFrame(map_list, columns=['n_genes',  'gene_method', 'query_method', 'species', 'mean_average_precision'])
 
 map_cell_types_list = [key + (v,) for key, v in label_map.items()]
 map_cell_types_list.sort()
-map_cell_types = pd.DataFrame(map_cell_types_list, columns=['cell_type', 'n_genes',  'gene_method', 'query_method', 'mean_average_precision'])
+map_cell_types = pd.DataFrame(map_cell_types_list, columns=['cell_type', 'n_genes',  'gene_method', 'query_method', 'species', 'mean_average_precision'])
 
 map_method_means.to_csv('MAP_method_means.csv', index=None)
 map_cell_types.to_csv('MAP_cell_types.csv', index=None)
 
-##################################################################
+#############################################################################################################################
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -264,8 +274,9 @@ scQuery_results = pd.DataFrame(scQuery_results[1:], columns=['cell_type', 'mean_
 scQuery_results['n_genes'] = 50
 scQuery_results['query_method'] = 'scQuery'
 scQuery_results['gene_method'] = 'ratio'
+scQuery_results['species'] = 'mouse'
 
-# TODO: plot?
+# TODO: plot for mouse, human, and both
 # plot cellmarker, cellmesh, cellmesh_tfidf. fix gene_method='ratio', group by query_method, plot over all n_genes.
 
 # for each cell type, plot performance of all methods
@@ -308,7 +319,7 @@ cell_type_no_cellmarker = map_cell_types[map_cell_types.query_method != 'cellmar
 best_methods_no_cellmarker = cell_type_no_cellmarker.sort_values('mean_average_precision', ascending=False).groupby('cell_type').first()
 
 # add scQuery results
-new_map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ratio', 'query_method': 'scQuery', 'mean_average_precision': 0.32136}, ignore_index=True)
+new_map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ratio', 'query_method': 'scQuery', 'mean_average_precision': 0.32136, 'species': 'mouse'}, ignore_index=True)
 new_mmm_subset = new_map_method_means[(new_map_method_means.gene_method=='ratio') & (new_map_method_means.n_genes==50)]
 
 sns.set(style='whitegrid', font_scale=1.5)
@@ -325,26 +336,88 @@ map_cell_types['top_3'] = [1 if x > 0.3 else 0 for x in map_cell_types['mean_ave
 map_cell_types['top_5'] = [1 if x >= 0.2 else 0 for x in map_cell_types['mean_average_precision']]
 map_cell_types['top_10'] = [1 if x >= 0.1 else 0 for x in map_cell_types['mean_average_precision']]
 # calculate mean top-1, top-3, and top-5 accuracy by method & gene count
-map_cell_type_means = map_cell_types.groupby(['query_method', 'gene_method', 'n_genes']).mean().reset_index()
+map_cell_type_means = map_cell_types.groupby(['query_method', 'gene_method', 'n_genes', 'species']).mean().reset_index()
+
 # plot top-1, top-3, and top-5 accuracy
 sns.set(style='whitegrid', font_scale=1.5)
 fig, axes = plt.subplots(1, 4, figsize=(60, 10))
 categories = ['top_1', 'top_3', 'top_5', 'top_10']
 titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10']
 for i, ax in enumerate(axes):
-    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes',
+            data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.species=='human')],
+            ax=ax)
     g.set_ylim(0, 1.0)
     g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i]))
-plt.savefig('top_1_accuracy_tm_droplet.png', dpi=100)
+plt.savefig('top_1_accuracy_tm_droplet_human.png', dpi=100)
+
+fig, axes = plt.subplots(1, 4, figsize=(60, 10))
+categories = ['top_1', 'top_3', 'top_5', 'top_10']
+titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10']
+for i, ax in enumerate(axes):
+    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes',
+            data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.species=='mouse')],
+            ax=ax)
+    g.set_ylim(0, 1.0)
+    g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i]))
+plt.savefig('top_1_accuracy_tm_droplet_mouse.png', dpi=100)
+
+fig, axes = plt.subplots(1, 4, figsize=(60, 10))
+categories = ['top_1', 'top_3', 'top_5', 'top_10']
+titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10']
+for i, ax in enumerate(axes):
+    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes',
+            data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.species=='both')],
+            ax=ax)
+    g.set_ylim(0, 1.0)
+    g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i]))
+plt.savefig('top_1_accuracy_tm_droplet_both.png', dpi=100)
+
+
+# plot top 1 accuracy with 50 genes, color by species
+fig, ax = plt.subplots(figsize=(18, 10))
+g = sns.categorical.barplot(x='query_method', y='top_1', hue='species',
+        data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)],
+        ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-1 Accuracy')
+plt.savefig('top_1_accuracy_tm_droplet_50_genes.png', dpi=100)
+
+# plot top 3 accuracy with 50 genes, color by species
+fig, ax = plt.subplots(figsize=(18, 10))
+g = sns.categorical.barplot(x='query_method', y='top_3', hue='species',
+        data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)],
+        ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-3 Accuracy')
+plt.savefig('top_3_accuracy_tm_droplet_50_genes.png', dpi=100)
+
+# plot top 3 accuracy with 50 genes, color by species
+fig, ax = plt.subplots(figsize=(18, 10))
+g = sns.categorical.barplot(x='query_method', y='top_5', hue='species',
+        data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)],
+        ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-5 Accuracy')
+plt.savefig('top_5_accuracy_tm_droplet_50_genes.png', dpi=100)
+
+
+
+
+
 
 fig, ax = plt.subplots(figsize=(18, 10))
-g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes',
+        data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'],
+        ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-3 Accuracy')
 plt.savefig('top_3_accuracy_tm_droplet.png', dpi=100)
 
 fig, ax = plt.subplots(figsize=(18, 10))
-g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes',
+        data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'],
+        ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-5 Accuracy')
 plt.savefig('top_5_accuracy_tm_droplet.png', dpi=100)
@@ -403,7 +476,7 @@ cellmesh_to_index = {c: i for i, c in enumerate(correct_cellmesh_results)}
 import numpy as np
 cell_type_results = np.zeros((len(cells_to_include), len(cells_to_include)))
 for i, c in enumerate(cells_to_include):
-    result_cells = label_cell_types[(c, 50, 'ratio', 'cellmesh')]
+    result_cells = label_cell_types[(c, 50, 'ratio', 'prob', 'mouse')]
     for i2, c2 in enumerate(result_cells):
         for x in correct_cellmesh_results:
             if c2 in x or x in c2:
@@ -424,4 +497,4 @@ sns.heatmap(cell_type_results, xticklabels=correct_cellmesh_results, yticklabels
 plt.title('CellMesh results for immune cells')
 plt.xlabel('CellMesh terms')
 plt.ylabel('Tabula Muris cell type')
-plt.savefig('heatmap_tm_droplet.png', dpi=100)
+plt.savefig('heatmap_tm_droplet_prob_mouse.png', dpi=100)
