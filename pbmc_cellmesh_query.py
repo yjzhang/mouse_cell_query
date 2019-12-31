@@ -1,23 +1,29 @@
 # TODO:
-# 1. load all mca data, with specific clusters
+# 1. load all tabula muris data, with specific clusters
 # 2. do diffexp using standard uncurl-app pipelines, take top k genes per cell type, 
 
 # 1. load data
+# start with droplet data
+import os
 import random
+
 import numpy as np
 import scipy.io
 from scipy import sparse
-import os
 import pickle
-"""
-path = 'cell_type_matrices_mca_coarse'
+
+# 1. 
+path = '/home/yjzhang/Grad_School/single_cell/10x_data/pooled_matrices'
 all_matrices = []
 all_labels = []
 for f in os.listdir(path):
     file_path = os.path.join(path, f)
-    label = f.split('.')[0]
+    print(file_path)
+    data_file_name = f.split('_filtered_gene_bc_matrices')[0]
+    data_file_path = os.path.join(file_path, 'filtered_matrices_mex/hg19/matrix.mtx')
+    label = data_file_name
     print(label)
-    data = scipy.io.mmread(file_path)
+    data = scipy.io.mmread(data_file_path)
     data = sparse.csc_matrix(data)
     all_matrices.append(data)
     all_labels.extend([label]*data.shape[1])
@@ -30,14 +36,15 @@ print(all_matrices.shape)
 print(all_labels.shape)
 
 # save all_matrices, all_labels
-scipy.io.mmwrite('mca_coarse_all_matrices.mtx', all_matrices)
-np.savetxt('mca_coarse_all_labels.txt', all_labels, fmt='%s')
+scipy.io.mmwrite('pbmc_all_matrices.mtx', all_matrices)
+np.savetxt('pbmc_all_labels.txt', all_labels, fmt='%s')
 
-############################################################################################
 
-genes = np.loadtxt('genes_mca.txt', dtype=str)
-all_matrices = scipy.io.mmread('mca_coarse_all_matrices.mtx')
-all_labels = np.loadtxt('mca_coarse_all_labels.txt', dtype=str, delimiter='##')
+##########################################################################
+genes = np.loadtxt('/home/yjzhang/Grad_School/single_cell/10x_data/pooled_matrices/b_cells_filtered_gene_bc_matrices/filtered_matrices_mex/hg19/genes.tsv', dtype=str)
+genes = genes[:,1]
+all_matrices = scipy.io.mmread('pbmc_all_matrices.mtx')
+all_labels = np.loadtxt('pbmc_all_labels.txt', dtype=str, delimiter='##')
 
 # 2. calculate diffexp for each cluster
 from uncurl_analysis import gene_extraction
@@ -45,29 +52,29 @@ import time
 t0 =  time.time()
 scores_t, pvals_t = gene_extraction.one_vs_rest_t(all_matrices, all_labels, eps=0.1, test='t')
 print('diffexp time for t test:', time.time() - t0)
-t0 =  time.time()
+#t0 =  time.time()
 #scores_u, pvals_u = gene_extraction.one_vs_rest_t(all_matrices, all_labels, eps=0.1, test='u')
-print('diffexp time for u test:', time.time() - t0)
+#print('diffexp time for u test:', time.time() - t0)
 
-with open('mca_coarse_t_scores.pkl', 'wb') as f:
+with open('pbmc_t_scores.pkl', 'wb') as f:
     pickle.dump(scores_t, f)
-with open('mca_coarse_t_pvals.pkl', 'wb') as f:
+with open('pbmc_t_pvals.pkl', 'wb') as f:
     pickle.dump(pvals_t, f)
-#with open('mca_coarse_u_pvals.pkl', 'wb') as f:
+#with open('pbmc_u_pvals.pkl', 'wb') as f:
 #    pickle.dump(pvals_u, f)
 
-"""
-###########################################################################################
+############################################################################
+
 # 3. for each cluster, run cellmesh and cellmarker
 
-with open('mca_coarse_t_scores.pkl', 'rb') as f:
+with open('pbmc_t_scores.pkl', 'rb') as f:
     scores_t = pickle.load(f)
-with open('mca_coarse_t_pvals.pkl', 'rb') as f:
+with open('pbmc_t_pvals.pkl', 'rb') as f:
     pvals_t = pickle.load(f)
-#with open('mca_coarse_u_pvals.pkl', 'rb') as f:
-#   pvals_u = pickle.load(f)
-all_labels = np.loadtxt('mca_coarse_all_labels.txt', dtype=str, delimiter='##')
-genes = np.loadtxt('genes_mca.txt', dtype=str)
+#with open('pbmc_u_pvals.pkl', 'rb') as f:
+#    pvals_u = pickle.load(f)
+all_labels = np.loadtxt('pbmc_all_labels.txt', dtype=str, delimiter='##')
+genes = np.loadtxt('mouse_cell_query/data/gene_names.txt', dtype=str)
 
 # get gene names - save ranked genes for each cell type
 top_genes_ratio = {}
@@ -75,7 +82,7 @@ for cell, cell_genes in scores_t.items():
     top_genes_ratio[cell] = [genes[i[0]] for i in cell_genes]
 import pandas as pd
 top_genes_ratio = pd.DataFrame(top_genes_ratio)
-top_genes_ratio.to_csv('mca_coarse_top_genes_ratio.csv')
+top_genes_ratio.to_csv('pbmc_top_genes_ratio.csv')
 
 import cellmesh
 from cellmesh import prob_method, gsva_ext_method
@@ -136,19 +143,15 @@ for label in labels_set:
                     label_cell_types[(label, n_gene, method, query_method, species)] = top_cells
                     print(label, n_gene, method, query_method, species, top_cells[:10])
 
-
-with open('mca_coarse_cellmesh_query_top_cells.pkl', 'wb') as f:
+#with open('pbmc_cellmesh_query_results.pkl', 'wb') as f:
+#    pickle.dump(label_results, f)
+with open('pbmc_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
 
-
-############################################################################################
-
-import pandas as pd
-with open('mca_coarse_cellmesh_query_top_cells.pkl', 'rb') as f:
+with open('pbmc_cellmesh_query_top_cells.pkl', 'rb') as f:
     label_cell_types = pickle.load(f)
 
 # TODO: how to compare accuracy?
-# TODO: convert MCA names to tabula muris
 # can we use a precision-recall curve?
 # load the hand-created mappings file
 cell_types_map = {}
@@ -165,6 +168,17 @@ with open('cell_ontology_to_cellmesh_tabula_muris.tsv') as f:
             cell_types_map[name] = primary_cellmesh_name
             cell_types_alternate_map[name] = alternate_cellmesh_names
 
+with open('tabula_muris_to_panglao.tsv') as f:
+    l0 = f.readline()
+    for line in f.readlines():
+        line_data = [x.strip() for x in line.split('\t')]
+        name = line_data[1]
+        primary_panglao_name = line_data[2]
+        alternate_panglao_names = line_data[3:]
+        use_cellmesh = line_data[0]
+        if use_cellmesh != 'n':
+            cell_types_alternate_map[name].extend(alternate_panglao_names)
+
 with open('tm_cell_onto_alternate_names.tsv') as f:
     l0 = f.readline()
     for line in f.readlines():
@@ -174,30 +188,6 @@ with open('tm_cell_onto_alternate_names.tsv') as f:
         if name in cell_types_alternate_map:
             cell_types_alternate_map[name].extend(alternate_cell_type_names)
 
-mca_cell_names_to_cellmarker = pd.read_table('mca_cell_names_to_cellmarker.tsv')
-mca_cell_names_map = {}
-import cellmesh
-for i, row in mca_cell_names_to_cellmarker.iterrows():
-    # TODO: match with cell_types_map and cell_types_alternate_map
-    cell_name = row['mca_cell_name']
-    if isinstance(row['tabula_muris'], str):
-        alt_name = row['tabula_muris'].strip()
-        mca_cell_names_map[cell_name] = cell_types_alternate_map[alt_name]
-        mca_cell_names_map[cell_name].append(cell_types_map[alt_name])
-    if isinstance(row['cellmarker_cellonto'], str):
-        alt_name = row['cellmarker_cellonto'].strip()
-        try:
-            mca_cell_names_map[cell_name].append(alt_name)
-        except:
-            mca_cell_names_map[cell_name] = [alt_name]
-        mca_cell_names_map[cell_name].extend([x[1] for x in cellmesh.cellonto_to_cellmesh(alt_name)])
-    if isinstance(row['cellmesh'], str):
-        alt_name = row['cellmesh'].strip()
-        try:
-            mca_cell_names_map[cell_name].append(alt_name)
-        except:
-            mca_cell_names_map[cell_name] = [alt_name]
-        mca_cell_names_map[cell_name].extend([x[1] for x in cellmesh.cellonto_to_cellmesh(alt_name)])
 
 # TODO: calculate accuracy of each label list
 label_accuracies = {}
@@ -206,15 +196,15 @@ for key, value in label_cell_types.items():
     name = key[0]
     accuracies = []
     extended_accuracies = []
-    if name not in mca_cell_names_map:
+    if name not in cell_types_map:
         continue
     for v in value:
-        if v.lower() in name.lower() or name.lower() in v.lower():
+        if v == cell_types_map[name] or v.lower() in name.lower() or name.lower() in v.lower():
             accuracies.append(1)
             extended_accuracies.append(1)
         else:
             accuracies.append(0)
-            if v in mca_cell_names_map[name]:
+            if v in cell_types_alternate_map[name]:
                 extended_accuracies.append(0.5)
             else:
                 extended_accuracies.append(0)
@@ -262,10 +252,10 @@ for key, val in label_map.items():
 
 map_method_means = {key: np.mean(val) for key, val in map_methods.items()}
 
-with open('mca_coarse_MAP_method_means.pkl', 'wb') as f:
+with open('MAP_method_means.pkl', 'wb') as f:
     pickle.dump(map_method_means, f)
 
-with open('mca_coarse_MAP_method_means.pkl', 'rb') as f:
+with open('MAP_method_means.pkl', 'rb') as f:
     map_method_means = pickle.load(f)
 
 # convert map_method_means to a pandas dict
@@ -279,37 +269,43 @@ map_cell_types_list = [key + (v,) for key, v in label_map.items()]
 map_cell_types_list.sort()
 map_cell_types = pd.DataFrame(map_cell_types_list, columns=['cell_type', 'n_genes',  'gene_method', 'query_method', 'species', 'mean_average_precision'])
 
-map_method_means.to_csv('mca_coarse_MAP_method_means.csv', index=None)
-map_cell_types.to_csv('mca_coarse_MAP_cell_types.csv', index=None)
+map_method_means.to_csv('MAP_method_means.csv', index=None)
+map_cell_types.to_csv('MAP_cell_types.csv', index=None)
 
-#####################################################################################################################
+#############################################################################################################################
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-map_method_means = pd.read_csv('mca_coarse_MAP_method_means.csv')
-map_cell_types = pd.read_csv('mca_coarse_MAP_cell_types.csv')
+map_method_means = pd.read_csv('MAP_method_means.csv')
+map_cell_types = pd.read_csv('MAP_cell_types.csv')
 # load scQuery results
-scQuery_results = pd.read_csv('MAP_mca_scquery_cell_types.csv')
-map_cell_types = map_cell_types.append(scQuery_results)
-map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ratio', 'query_method': 'scquery', 'species': 'mouse', 'mean_average_precision': scQuery_results['mean_average_precision'].mean()}, ignore_index=True)
+scQuery_results = []
+with open('scQuery_top_gene_results.csv') as f:
+    for i, line in enumerate(f.readlines()):
+        line_data = line.split(',')[:2]
+        if i > 0:
+            line_data[1] = float(line_data[1])
+        scQuery_results.append(line_data)
+scQuery_results = pd.DataFrame(scQuery_results[1:], columns=['cell_type', 'mean_average_precision'])
+scQuery_results['n_genes'] = 50
+scQuery_results['query_method'] = 'scQuery'
+scQuery_results['gene_method'] = 'ratio'
+scQuery_results['species'] = 'mouse'
 
-
-# TODO: plot?
+# TODO: plot for mouse, human, and both
 # plot cellmarker, cellmesh, cellmesh_tfidf. fix gene_method='ratio', group by query_method, plot over all n_genes.
 
 # for each cell type, plot performance of all methods
 all_cell_types = sorted(list(set(map_cell_types.cell_type)))
+map_cell_types = map_cell_types.append(scQuery_results)
 map_cell_types_subset = map_cell_types[map_cell_types.gene_method=='ratio']
 sns.set(style='whitegrid', font_scale=1.0)
-plot_y = int(np.ceil(len(all_cell_types)/10))
-fig, axes = plt.subplots(10, plot_y, figsize=(120, 50))
+fig, axes = plt.subplots(7, 7, figsize=(55, 28))
 for i, axes_1 in enumerate(axes):
     for j, ax in enumerate(axes_1):
-        index = i*plot_y + j
-        if index >= len(all_cell_types):
-            break
+        index = i*7 + j
         data_subset = map_cell_types_subset[map_cell_types_subset.cell_type==all_cell_types[index]]
         g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=data_subset, ax=ax)
         ax.set_title(all_cell_types[index])
@@ -320,7 +316,7 @@ for i, axes_1 in enumerate(axes):
         ax.set_ylim(0, 1)
         if i != j:
             ax.get_legend().remove()
-plt.savefig('map_ratios_mca_coarse_all_cell_types.png', dpi=100)
+plt.savefig('map_ratios_pbmc_all_cell_types.png', dpi=100)
 
 
 
@@ -332,7 +328,7 @@ fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=map_method_means_subset, ax=ax)
 plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
-plt.savefig('map_ratios_mca_coarse.png', dpi=100)
+plt.savefig('map_ratios_pbmc.png', dpi=100)
 
 # analysis: which cell types did each of the methods perform poorly on?
 best_methods_per_cell_type = map_cell_types.sort_values('mean_average_precision', ascending=False).groupby('cell_type').first()
@@ -341,23 +337,16 @@ cell_type_no_cellmarker = map_cell_types[map_cell_types.query_method != 'cellmar
 best_methods_no_cellmarker = cell_type_no_cellmarker.sort_values('mean_average_precision', ascending=False).groupby('cell_type').first()
 
 # add scQuery results
-# TODO: calculate results with scquery
-#new_map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ratio', 'query_method': 'scQuery', 'mean_average_precision': 0.32136}, ignore_index=True)
-new_mmm_subset = map_method_means[(map_method_means.gene_method=='ratio') & (map_method_means.n_genes==50)]
+new_map_method_means = map_method_means.append({'n_genes': 50,'gene_method': 'ratio', 'query_method': 'scQuery', 'mean_average_precision': 0.32136, 'species': 'mouse'}, ignore_index=True)
+new_mmm_subset = new_map_method_means[(new_map_method_means.gene_method=='ratio') & (new_map_method_means.n_genes==50)]
 
 sns.set(style='whitegrid', font_scale=1.5)
 fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=new_mmm_subset, ax=ax)
 plt.ylim(0, 0.8)
 plt.title('Cell Type Annotation Accuracy')
-plt.savefig('map_ratios_mca_coarse_with_scquery.png', dpi=100)
+plt.savefig('map_ratios_pbmc_with_scquery.png', dpi=100)
 
-#sns.set(style='whitegrid', font_scale=1.5)
-#fig, ax = plt.subplots(figsize=(8, 10))
-#g = sns.categorical.barplot(x='query_method', y='mean_average_precision', hue='n_genes', data=new_mmm_subset, ax=ax)
-#plt.ylim(0, 0.8)
-#plt.title('Cell Type Annotation Accuracy')
-#plt.savefig('map_ratios_mca_coarse_with_scquery.png', dpi=100)
 
 # convert MAP to top-1, top-3, and top-5 accuracy
 map_cell_types['top_1'] = [1 if x > 0.9 else 0 for x in map_cell_types['mean_average_precision']]
@@ -366,28 +355,41 @@ map_cell_types['top_5'] = [1 if x >= 0.2 else 0 for x in map_cell_types['mean_av
 map_cell_types['top_10'] = [1 if x >= 0.1 else 0 for x in map_cell_types['mean_average_precision']]
 # calculate mean top-1, top-3, and top-5 accuracy by method & gene count
 map_cell_type_means = map_cell_types.groupby(['query_method', 'gene_method', 'n_genes', 'species']).mean().reset_index()
+
 # plot top-1, top-3, and top-5 accuracy
 sns.set(style='whitegrid', font_scale=1.5)
-fig, axes = plt.subplots(1, 4, figsize=(55, 10))
-categories = ['top_1', 'top_3', 'top_5', 'top_10'] 
-titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10'] 
+fig, axes = plt.subplots(1, 4, figsize=(60, 10))
+categories = ['top_1', 'top_3', 'top_5', 'top_10']
+titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10']
 for i, ax in enumerate(axes):
-    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
+    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes',
+            data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.species=='human')],
+            ax=ax)
     g.set_ylim(0, 1.0)
-    g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i])) 
-plt.savefig('top_1_accuracy_mca_coarse.png', dpi=100)
+    g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i]))
+plt.savefig('top_1_accuracy_pbmc_human.png', dpi=100)
 
-fig, ax = plt.subplots(figsize=(18, 10))
-g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
-plt.ylim(0, 1.0)
-plt.title('Cell Type Annotation Top-3 Accuracy')
-plt.savefig('top_3_accuracy_mca_coarse.png', dpi=100)
+fig, axes = plt.subplots(1, 4, figsize=(60, 10))
+categories = ['top_1', 'top_3', 'top_5', 'top_10']
+titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10']
+for i, ax in enumerate(axes):
+    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes',
+            data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.species=='mouse')],
+            ax=ax)
+    g.set_ylim(0, 1.0)
+    g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i]))
+plt.savefig('top_1_accuracy_pbmc_mouse.png', dpi=100)
 
-fig, ax = plt.subplots(figsize=(18, 10))
-g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'], ax=ax)
-plt.ylim(0, 1.0)
-plt.title('Cell Type Annotation Top-5 Accuracy')
-plt.savefig('top_5_accuracy_mca_coarse.png', dpi=100)
+fig, axes = plt.subplots(1, 4, figsize=(60, 10))
+categories = ['top_1', 'top_3', 'top_5', 'top_10']
+titles = ['Top-1', 'Top-3', 'Top-5', 'Top-10']
+for i, ax in enumerate(axes):
+    g = sns.categorical.barplot(x='query_method', y=categories[i], hue='n_genes',
+            data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.species=='both')],
+            ax=ax)
+    g.set_ylim(0, 1.0)
+    g.set_title('Cell Type Annotation {0} Accuracy'.format(titles[i]))
+plt.savefig('top_1_accuracy_pbmc_both.png', dpi=100)
 
 
 # plot top 1 accuracy with 50 genes, color by species
@@ -397,7 +399,7 @@ g = sns.categorical.barplot(x='query_method', y='top_1', hue='species',
         ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-1 Accuracy')
-plt.savefig('top_1_accuracy_mca_coarse_50_genes.png', dpi=100)
+plt.savefig('top_1_accuracy_pbmc_50_genes.png', dpi=100)
 
 # plot top 3 accuracy with 50 genes, color by species
 fig, ax = plt.subplots(figsize=(18, 10))
@@ -406,14 +408,108 @@ g = sns.categorical.barplot(x='query_method', y='top_3', hue='species',
         ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-3 Accuracy')
-plt.savefig('top_3_accuracy_mca_coarse_50_genes.png', dpi=100)
+plt.savefig('top_3_accuracy_pbmc_50_genes.png', dpi=100)
 
-# plot top 5 accuracy with 50 genes, color by species
+# plot top 3 accuracy with 50 genes, color by species
 fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_5', hue='species',
         data=map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)],
         ax=ax)
 plt.ylim(0, 1.0)
 plt.title('Cell Type Annotation Top-5 Accuracy')
-plt.savefig('top_5_accuracy_mca_coarse_50_genes.png', dpi=100)
+plt.savefig('top_5_accuracy_pbmc_50_genes.png', dpi=100)
 
+
+
+fig, ax = plt.subplots(figsize=(18, 10))
+g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes',
+        data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'],
+        ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-3 Accuracy')
+plt.savefig('top_3_accuracy_pbmc.png', dpi=100)
+
+fig, ax = plt.subplots(figsize=(18, 10))
+g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes',
+        data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'],
+        ax=ax)
+plt.ylim(0, 1.0)
+plt.title('Cell Type Annotation Top-5 Accuracy')
+plt.savefig('top_5_accuracy_pbmc.png', dpi=100)
+
+# TODO: only plot the top 3 accuracy at one particular gene count
+#map_cell_type_means_subset = map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)]
+#sns.set(style='whitegrid', font_scale=1.5)
+#fig, ax = plt.subplots(figsize=(18, 10))
+#g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
+#plt.ylim(0, 1.0)
+#plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-5 Accuracy')
+#plt.savefig('top_5_accuracy_pbmc_50_genes.png', dpi=100)
+#fig, ax = plt.subplots(figsize=(18, 10))
+#g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
+#plt.ylim(0, 1.0)
+#plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-3 Accuracy')
+#plt.savefig('top_3_accuracy_pbmc_50_genes.png', dpi=100)
+
+###############################################################################################################
+
+# TODO: create a heatmap?
+import pickle
+with open('pbmc_cellmesh_query_top_cells.pkl', 'rb') as f:
+    label_cell_types = pickle.load(f)
+
+# pick a subset of cell types
+# pick cells within a group?
+# immune cells: dendritic cell, B cell, natural killer cell, mast cell, T cell, macrophage, monocyte, basophil
+cells_to_include = [
+        'dendritic cell',
+        'B cell',
+        'natural killer cell',
+        'mast cell',
+        'T cell',
+        'macrophage',
+        'monocyte',
+        'basophil'
+]
+# load the hand-created mappings file
+cell_types_map = {}
+cell_types_alternate_map = {}
+with open('cell_ontology_to_cellmesh_tabula_muris.tsv') as f:
+    l0 = f.readline()
+    for line in f.readlines():
+        line_data = [x.strip() for x in line.split('\t')]
+        name = line_data[1]
+        primary_cellmesh_name = line_data[2]
+        alternate_cellmesh_names = line_data[3:]
+        use_cellmesh = line_data[0]
+        if use_cellmesh != 'n':
+            cell_types_map[name] = primary_cellmesh_name
+            cell_types_alternate_map[name] = alternate_cellmesh_names
+correct_cellmesh_results = [cell_types_map[x] for x in cells_to_include]
+cellmesh_to_index = {c: i for i, c in enumerate(correct_cellmesh_results)}
+# create a heatmap
+import numpy as np
+cell_type_results = np.zeros((len(cells_to_include), len(cells_to_include)))
+for i, c in enumerate(cells_to_include):
+    result_cells = label_cell_types[(c, 50, 'ratio', 'prob', 'mouse')]
+    for i2, c2 in enumerate(result_cells):
+        for x in correct_cellmesh_results:
+            if c2 in x or x in c2:
+                index = cellmesh_to_index[x]
+                if cell_type_results[i, index] == 0:
+                    rr = 1.0/(i2+1)
+                    cell_type_results[i, index] = rr
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.figure(figsize=(10,10))
+plt.tight_layout()
+plt.cla()
+plt.clf()
+plt.gcf().subplots_adjust(bottom=0.3)
+plt.gcf().subplots_adjust(left=0.25)
+sns.set(style='whitegrid', font_scale=1.5)
+sns.heatmap(cell_type_results, xticklabels=correct_cellmesh_results, yticklabels=cells_to_include)
+plt.title('CellMesh results for immune cells')
+plt.xlabel('CellMesh terms')
+plt.ylabel('Tabula Muris cell type')
+plt.savefig('heatmap_pbmc_prob_mouse.png', dpi=100)

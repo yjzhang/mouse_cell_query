@@ -89,7 +89,7 @@ label_results = {}
 label_cell_types = {}
 n_genes = [20, 50, 100, 200, 1000]
 gene_methods = ['ratio']#, 't', 'u']
-query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva', 'random_mesh']#, 'aggregate', 'aggregate_2']
+query_methods = ['cellmarker', 'panglao', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva', 'random_mesh']#, 'aggregate', 'aggregate_2']
 all_species = ['human', 'mouse', 'both']
 all_mesh_cell_id_names = cellmesh.get_all_cell_id_names(include_cell_components=False)
 all_mesh_terms = [x[1] for x in all_mesh_cell_id_names]
@@ -107,6 +107,9 @@ for label in labels_set:
                     top_genes = [x.upper() for x in top_genes]
                     if query_method == 'cellmarker':
                         results = cellmarker.hypergeometric_test(top_genes, species=species)
+                        top_cells = [x[0] for x in results]
+                    elif query_method == 'panglao':
+                        results = cellmarker.hypergeometric_test(top_genes, species=species, db_dir=cellmarker.PANGLAO_DB_DIR)
                         top_cells = [x[0] for x in results]
                     elif query_method == 'cellmesh':
                         results = cellmesh.hypergeometric_test(top_genes, species=species)
@@ -160,6 +163,17 @@ with open('cell_ontology_to_cellmesh_tabula_muris.tsv') as f:
         if use_cellmesh != 'n':
             cell_types_map[name] = primary_cellmesh_name
             cell_types_alternate_map[name] = alternate_cellmesh_names
+
+with open('tabula_muris_to_panglao.tsv') as f:
+    l0 = f.readline()
+    for line in f.readlines():
+        line_data = [x.strip() for x in line.split('\t')]
+        name = line_data[1]
+        primary_panglao_name = line_data[2]
+        alternate_panglao_names = line_data[3:]
+        use_cellmesh = line_data[0]
+        if use_cellmesh != 'n':
+            cell_types_alternate_map[name].extend(alternate_panglao_names)
 
 with open('tm_cell_onto_alternate_names.tsv') as f:
     l0 = f.readline()
@@ -403,9 +417,6 @@ plt.savefig('top_5_accuracy_tm_droplet_50_genes.png', dpi=100)
 
 
 
-
-
-
 fig, ax = plt.subplots(figsize=(18, 10))
 g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes',
         data=map_cell_type_means[map_cell_type_means.gene_method=='ratio'],
@@ -423,18 +434,18 @@ plt.title('Cell Type Annotation Top-5 Accuracy')
 plt.savefig('top_5_accuracy_tm_droplet.png', dpi=100)
 
 # TODO: only plot the top 3 accuracy at one particular gene count
-map_cell_type_means_subset = map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)]
-sns.set(style='whitegrid', font_scale=1.5)
-fig, ax = plt.subplots(figsize=(18, 10))
-g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
-plt.ylim(0, 1.0)
-plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-5 Accuracy')
-plt.savefig('top_5_accuracy_tm_droplet_50_genes.png', dpi=100)
-fig, ax = plt.subplots(figsize=(18, 10))
-g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
-plt.ylim(0, 1.0)
-plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-3 Accuracy')
-plt.savefig('top_3_accuracy_tm_droplet_50_genes.png', dpi=100)
+#map_cell_type_means_subset = map_cell_type_means[(map_cell_type_means.gene_method=='ratio') & (map_cell_type_means.n_genes==50)]
+#sns.set(style='whitegrid', font_scale=1.5)
+#fig, ax = plt.subplots(figsize=(18, 10))
+#g = sns.categorical.barplot(x='query_method', y='top_5', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
+#plt.ylim(0, 1.0)
+#plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-5 Accuracy')
+#plt.savefig('top_5_accuracy_tm_droplet_50_genes.png', dpi=100)
+#fig, ax = plt.subplots(figsize=(18, 10))
+#g = sns.categorical.barplot(x='query_method', y='top_3', hue='n_genes', data=map_cell_type_means_subset, ax=ax)
+#plt.ylim(0, 1.0)
+#plt.title('Tabula Muris Drop-seq Cell Type Annotation Top-3 Accuracy')
+#plt.savefig('top_3_accuracy_tm_droplet_50_genes.png', dpi=100)
 
 ###############################################################################################################
 

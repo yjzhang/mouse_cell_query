@@ -89,7 +89,7 @@ label_results = {}
 label_cell_types = {}
 n_genes = [20, 50, 100, 200, 1000]
 gene_methods = ['ratio']#, 't', 'u']
-query_methods = ['cellmarker', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva', 'random_mesh']#, 'aggregate', 'aggregate_2']
+query_methods = ['cellmarker', 'panglao', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva', 'random_mesh']#, 'aggregate', 'aggregate_2']
 all_species = ['human', 'mouse', 'both']
 all_mesh_cell_id_names = cellmesh.get_all_cell_id_names(include_cell_components=False)
 all_mesh_terms = [x[1] for x in all_mesh_cell_id_names]
@@ -107,6 +107,9 @@ for label in labels_set:
                     top_genes = [x.upper() for x in top_genes]
                     if query_method == 'cellmarker':
                         results = cellmarker.hypergeometric_test(top_genes, species=species)
+                        top_cells = [x[0] for x in results]
+                    elif query_method == 'panglao':
+                        results = cellmarker.hypergeometric_test(top_genes, species=species, db_dir=cellmarker.PANGLAO_DB_DIR)
                         top_cells = [x[0] for x in results]
                     elif query_method == 'cellmesh':
                         results = cellmesh.hypergeometric_test(top_genes, species=species)
