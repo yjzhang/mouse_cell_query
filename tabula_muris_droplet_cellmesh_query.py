@@ -83,13 +83,14 @@ top_genes_ratio.to_csv('tabula_muris_dropseq_top_genes_ratio.csv')
 import cellmesh
 from cellmesh import prob_method, gsva_ext_method
 import cellmarker
+from cellmarker import prob_method as cellmarker_prob_method
 from mouse_cell_query import query_aggregation
 labels_set = set(all_labels)
 label_results = {}
 label_cell_types = {}
 n_genes = [20, 50, 100, 200, 1000]
 gene_methods = ['ratio']#, 't', 'u']
-query_methods = ['cellmarker', 'panglao', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva', 'random_mesh']#, 'aggregate', 'aggregate_2']
+query_methods = ['cellmarker', 'cellmarker_prob', 'panglao', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva', 'random_mesh']#, 'aggregate', 'aggregate_2']
 all_species = ['human', 'mouse', 'both']
 all_mesh_cell_id_names = cellmesh.get_all_cell_id_names(include_cell_components=False)
 all_mesh_terms = [x[1] for x in all_mesh_cell_id_names]
@@ -107,6 +108,9 @@ for label in labels_set:
                     top_genes = [x.upper() for x in top_genes]
                     if query_method == 'cellmarker':
                         results = cellmarker.hypergeometric_test(top_genes, species=species)
+                        top_cells = [x[0] for x in results]
+                    elif query_method == 'cellmarker_prob':
+                        results = cellmarker_prob_method.prob_test(top_genes, species=species)
                         top_cells = [x[0] for x in results]
                     elif query_method == 'panglao':
                         results = cellmarker.hypergeometric_test(top_genes, species=species, db_dir=cellmarker.PANGLAO_DB_DIR)
