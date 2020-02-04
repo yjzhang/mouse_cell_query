@@ -74,7 +74,7 @@ with open('pbmc_t_pvals.pkl', 'rb') as f:
 #with open('pbmc_u_pvals.pkl', 'rb') as f:
 #    pvals_u = pickle.load(f)
 all_labels = np.loadtxt('pbmc_all_labels.txt', dtype=str, delimiter='##')
-genes = np.loadtxt('mouse_cell_query/data/gene_names.txt', dtype=str)
+genes = np.loadtxt('/home/yjzhang/Grad_School/single_cell/uncurl_test_datasets/10x_pure_pooled/gene_names_8000.tsv', dtype=str)
 
 # get gene names - save ranked genes for each cell type
 top_genes_ratio = {}
