@@ -17,7 +17,7 @@ for f in os.listdir(path):
     file_path = os.path.join(path, f)
     label = f.split('.')[0]
     print(label)
-    data = scipy.io.mmread(file_path)
+    data = scipy.io.mmread(file_path).T
     data = sparse.csc_matrix(data)
     all_matrices.append(data)
     all_labels.extend([label]*data.shape[1])
