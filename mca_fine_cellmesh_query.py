@@ -210,6 +210,10 @@ label_accuracies = {}
 label_extended_accuracies = {}
 for key, value in label_cell_types.items():
     name = key[0]
+    name = name.split('(')[0].split('_')[0].strip()
+    name = name.capitalize().strip()
+    if name.endswith('s'):
+        name = name[:-1]
     accuracies = []
     extended_accuracies = []
     if name not in mca_cell_names_map:
