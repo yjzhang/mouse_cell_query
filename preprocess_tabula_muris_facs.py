@@ -2,6 +2,7 @@
 # data source: https://figshare.com/articles/Single-cell_RNA-seq_data_from_microfluidic_emulsion_v2_/5968960
 # tabula_muris/droplet.zip
 
+from collections import defaultdict
 import os
 
 import numpy as np
@@ -16,8 +17,9 @@ current_channel = None
 current_tissue = None
 current_matrix = None
 current_barcodes = None
-tissue_values = {}
-cell_type_values = {}
+tissue_values = defaultdict(lambda: [])
+cell_type_values = defaultdict(lambda: [])
+tissue_cell_types = defaultdict(lambda: [])
 genes = None
 normalize = False
 for i, row in annotations_facs.iterrows():
@@ -30,13 +32,13 @@ for i, row in annotations_facs.iterrows():
         if genes is None:
             genes = current_matrix.iloc[:,0].values.astype(str)
     cell_type = row.cell_ontology_class
-    if cell_type not in cell_type_values:
-        cell_type_values[cell_type] = []
     index = row.cell
     values = current_matrix[index].values
     if normalize:
         values = values/values.sum()
     cell_type_values[cell_type].append(values)
+    tissue_values[tissue].append(values)
+    tissue_cell_types[tissue].append(cell_type)
 
 np.savetxt('tabula_muris_facs_genes.txt', genes, fmt='%s')
 
@@ -85,3 +87,15 @@ for cell_type, values in cell_type_values.items():
     v_matrix = sparse.csc_matrix(v_matrix)
     scipy.io.mmwrite('cell_type_matrices_tm_facs/{0}.mtx'.format(cell_type), v_matrix)
     subprocess.call(['gzip', 'cell_type_matrices_tm_facs/{0}.mtx'.format(cell_type)])
+
+# TODO: save matrices of tissues
+os.makedirs('tissue_type_matrices_tm_facs', exist_ok=True)
+for tissue_type, values in tissue_values.items():
+    # this is of shape cells x genes
+    v_matrix = np.vstack([x.flatten() for x in values])
+    v_matrix = sparse.csc_matrix(v_matrix)
+    scipy.io.mmwrite('tissue_type_matrices_tm_facs/{0}.mtx'.format(tissue_type), v_matrix)
+    subprocess.call(['gzip', 'tissue_type_matrices_tm_facs/{0}.mtx'.format(tissue_type)])
+    np.savetxt('tissue_type_matrices_tm_facs/{0}_cell_types.txt'.format(tissue_type), tissue_cell_types[tissue_type], fmt='%s')
+
+
