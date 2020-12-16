@@ -13,6 +13,7 @@ from scipy import sparse
 import pickle
 
 # 1. 
+"""
 path = '/home/yjzhang/Grad_School/single_cell/10x_data/pooled_matrices'
 all_matrices = []
 all_labels = []
@@ -38,9 +39,12 @@ print(all_labels.shape)
 # save all_matrices, all_labels
 scipy.io.mmwrite('pbmc_all_matrices.mtx', all_matrices)
 np.savetxt('pbmc_all_labels.txt', all_labels, fmt='%s')
+"""
 
 
 ##########################################################################
+
+"""
 genes = np.loadtxt('/home/yjzhang/Grad_School/single_cell/10x_data/pooled_matrices/b_cells_filtered_gene_bc_matrices/filtered_matrices_mex/hg19/genes.tsv', dtype=str)
 genes = genes[:,1]
 all_matrices = scipy.io.mmread('pbmc_all_matrices.mtx')
@@ -62,6 +66,7 @@ with open('pbmc_t_pvals.pkl', 'wb') as f:
     pickle.dump(pvals_t, f)
 #with open('pbmc_u_pvals.pkl', 'wb') as f:
 #    pickle.dump(pvals_u, f)
+"""
 
 ############################################################################
 
@@ -91,10 +96,14 @@ from mouse_cell_query import query_aggregation
 labels_set = set(all_labels)
 label_results = {}
 label_cell_types = {}
-n_genes = [20, 50, 100, 200, 1000]
+n_genes = [50] #20, 50, 100, 200, 1000]
 gene_methods = ['ratio']#, 't', 'u']
-query_methods = ['cellmarker', 'panglao', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva', 'random_mesh']#, 'aggregate', 'aggregate_2']
+query_methods = ['cellmesh', 'prob']#['cellmarker', 'panglao', 'cellmesh', 'cellmesh_tfidf', 'prob', 'gsva', 'random_mesh']#, 'aggregate', 'aggregate_2']
 all_species = ['human', 'mouse', 'both']
+
+# TODO: use subtree search
+root_restrictions = ['Cells', 'Blood Cells', 'Leukocytes', 'Immune System']
+cell_type_subsets = [('D002477',), ('D001773',), ('D007962',), ('D007107',)]
 all_mesh_cell_id_names = cellmesh.get_all_cell_id_names(include_cell_components=False)
 all_mesh_terms = [x[1] for x in all_mesh_cell_id_names]
 for label in labels_set:
@@ -102,51 +111,65 @@ for label in labels_set:
         for method in gene_methods:
             for query_method in query_methods:
                 for species in all_species:
-                    if method == 'ratio':
-                        top_genes = [genes[x[0]] for x in scores_t[label][:n_gene]]
-                    elif method == 't':
-                        top_genes = [genes[x[0]] for x in pvals_t[label][:n_gene]]
-                    elif method == 'u':
-                        top_genes = [genes[x[0]] for x in pvals_u[label][:n_gene]]
-                    top_genes = [x.upper() for x in top_genes]
-                    if query_method == 'cellmarker':
-                        results = cellmarker.hypergeometric_test(top_genes, species=species)
-                        top_cells = [x[0] for x in results]
-                    elif query_method == 'panglao':
-                        results = cellmarker.hypergeometric_test(top_genes, species=species, db_dir=cellmarker.PANGLAO_DB_DIR)
-                        top_cells = [x[0] for x in results]
-                    elif query_method == 'cellmesh':
-                        results = cellmesh.hypergeometric_test(top_genes, species=species)
-                        top_cells = [x[1] for x in results]
-                    elif query_method == 'cellmesh_tfidf':
-                        results = cellmesh.normed_hypergeometric_test(top_genes, species=species)
-                        top_cells = [x[1] for x in results]
-                    elif query_method == 'aggregate':
-                        results = query_aggregation.cellmarker_cellmesh_hypergeometric_test(top_genes)
-                        top_cells = [x[1] for x in results[1:]]
-                        results = results[1:]
-                    elif query_method == 'aggregate_2':
-                        results = query_aggregation.cellmarker_cellmesh_tfidf_hypergeometric_test(top_genes)
-                        top_cells = [x[1] for x in results[1:]]
-                        results = results[1:]
-                    elif query_method == 'prob':
-                        results = prob_method.prob_test(top_genes, species=species)
-                        top_cells = [x[1] for x in results]
-                    elif query_method == 'gsva':
-                        results = gsva_ext_method.gsva_ext_test(top_genes, species=species)
-                        top_cells = [x[1] for x in results]
-                    elif query_method == 'random_mesh':
-                        # select a random MeSH term
-                        top_cells = random.sample(all_mesh_terms, 10)
-                        results = top_cells
-                    #label_results[(label, n_gene, method, query_method, species)] = [x[:-1] for x in results]
-                    label_cell_types[(label, n_gene, method, query_method, species)] = top_cells
-                    print(label, n_gene, method, query_method, species, top_cells[:10])
+                    for cell_subset in cell_type_subsets:
+                        if method == 'ratio':
+                            top_genes = [genes[x[0]] for x in scores_t[label][:n_gene]]
+                        elif method == 't':
+                            top_genes = [genes[x[0]] for x in pvals_t[label][:n_gene]]
+                        elif method == 'u':
+                            top_genes = [genes[x[0]] for x in pvals_u[label][:n_gene]]
+                        top_genes = [x.upper() for x in top_genes]
+                        if query_method == 'cellmarker':
+                            results = cellmarker.hypergeometric_test(top_genes, species=species)
+                            top_cells = [x[0] for x in results]
+                        elif query_method == 'panglao':
+                            results = cellmarker.hypergeometric_test(top_genes, species=species, db_dir=cellmarker.PANGLAO_DB_DIR)
+                            top_cells = [x[0] for x in results]
+                        elif query_method == 'cellmesh':
+                            results = cellmesh.hypergeometric_test(top_genes, species=species, cell_type_subset=cell_subset)
+                            top_cells = [x[1] for x in results]
+                        elif query_method == 'cellmesh_tfidf':
+                            results = cellmesh.normed_hypergeometric_test(top_genes, species=species)
+                            top_cells = [x[1] for x in results]
+                        elif query_method == 'aggregate':
+                            results = query_aggregation.cellmarker_cellmesh_hypergeometric_test(top_genes)
+                            top_cells = [x[1] for x in results[1:]]
+                            results = results[1:]
+                        elif query_method == 'aggregate_2':
+                            results = query_aggregation.cellmarker_cellmesh_tfidf_hypergeometric_test(top_genes)
+                            top_cells = [x[1] for x in results[1:]]
+                            results = results[1:]
+                        elif query_method == 'prob':
+                            results = prob_method.prob_test(top_genes, species=species, cell_type_subset=cell_subset)
+                            top_cells = [x[1] for x in results]
+                        elif query_method == 'gsva':
+                            results = gsva_ext_method.gsva_ext_test(top_genes, species=species)
+                            top_cells = [x[1] for x in results]
+                        elif query_method == 'random_mesh':
+                            # select a random MeSH term
+                            top_cells = random.sample(all_mesh_terms, 10)
+                            results = top_cells
+                        #label_results[(label, n_gene, method, query_method, species)] = [x[:-1] for x in results]
+                        label_cell_types[(label, n_gene, method, query_method, species, cell_subset[0])] = top_cells
+                        print(label, n_gene, method, query_method, species, cell_subset[0], top_cells[:10])
 
 #with open('pbmc_cellmesh_query_results.pkl', 'wb') as f:
 #    pickle.dump(label_results, f)
 with open('pbmc_cellmesh_query_top_cells.pkl', 'wb') as f:
     pickle.dump(label_cell_types, f)
+
+cell_type_df = []
+for k, v in label_cell_types.items():
+    if k[4] != 'human' or k[1] != 50:
+        continue
+    for i, cell in enumerate(v[:5]):
+        cell_type_df.append((k[0], k[3], k[5], cell, i))
+
+cell_type_df = pd.DataFrame(cell_type_df, columns=['ground_truth', 'query_method', 'cell_subset', 'cell_type', 'rank'])
+
+cell_type_df.to_csv('pbmc_cellmesh_query_50genes_human_top5_cells.csv', index=None)
+
+###########################################################################
 
 with open('pbmc_cellmesh_query_top_cells.pkl', 'rb') as f:
     label_cell_types = pickle.load(f)
