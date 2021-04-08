@@ -1,22 +1,32 @@
 # loads the processed mca data, combines the same cell types from different tissues?
+
+import os
+
 import numpy as np
+import scipy.io
+from scipy import sparse
 
-from uncurl_analysis import dense_matrix_h5
 
-
-cell_type_means = dense_matrix_h5.H5Dict('mouse_cell_query/data/cell_type_means_mca.h5')
-
-cell_types = cell_type_means.keys()
+# TODO: load cell types from folder
+base_path = 'mca_microwell_seq/cell_type_matrices_mca'
+cell_types = []
+for filename in os.listdir(base_path):
+    if filename.endswith('.mtx.gz'):
+        base_name = filename[:-7]
+        cell_types.append(base_name)
 
 # sort cell types into coarser classes - merge tissues
 cell_type_classes = set()
 cell_type_classes_map = {}
+coarse_to_fine_map = {}
 
 for cell_type in cell_types:
     x = cell_type.split('(')[0]
     if x not in cell_type_classes:
         cell_type_classes.add(x)
+        coarse_to_fine_map[x] = []
     cell_type_classes_map[cell_type] = x
+    coarse_to_fine_map[x].append(cell_type)
 
 cell_type_classes_coarse = set()
 cell_type_classes_map_coarse = {}
@@ -30,11 +40,8 @@ for cell_type in cell_types:
         cell_type_classes_coarse.add(x)
     cell_type_classes_map_coarse[cell_type] = x
 
-import os
-import scipy.io
-from scipy import sparse
 
-base_dir = 'cell_type_matrices_mca'
+base_dir = 'mca_microwell_seq/cell_type_matrices_mca'
 new_cell_types_dict = {x: [] for x in cell_type_classes_coarse}
 for filename in os.listdir(base_dir):
     data = sparse.csc_matrix(scipy.io.mmread(os.path.join(base_dir, filename)).T)

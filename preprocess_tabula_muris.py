@@ -13,6 +13,7 @@ from scipy import sparse
 metadata_droplet = pd.read_csv('tabula_muris/metadata_droplet.csv')
 annotations_droplet = pd.read_csv('tabula_muris/annotations_droplet.csv')
 
+# TODO: save cell barcodes for each cell type
 current_channel = None
 current_tissue = None
 current_matrix = None
