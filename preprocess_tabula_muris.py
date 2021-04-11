@@ -21,6 +21,7 @@ current_barcodes = None
 tissue_values = defaultdict(lambda: [])
 cell_type_values = defaultdict(lambda: [])
 tissue_cell_types = defaultdict(lambda: [])
+cell_type_ids = defaultdict(lambda: [])
 normalize = False
 for index, row in annotations_droplet.iterrows():
     channel = row.channel
@@ -30,10 +31,11 @@ for index, row in annotations_droplet.iterrows():
         current_channel = channel
         current_tissue = tissue
         print(tissue, channel)
-        current_matrix = scipy.io.mmread(os.path.join('tabula_muris', 'droplet', dirname, 'matrix.mtx'))
+        current_matrix = scipy.io.mmread(os.path.join('tabula_muris', 'droplet', dirname, 'matrix.mtx.gz'))
         current_matrix = sparse.csc_matrix(current_matrix)
         # TODO: preprocess current_matrix?
         current_barcodes = pd.read_csv(os.path.join('tabula_muris', 'droplet', dirname, 'barcodes.tsv'), header=None)
+    cell_id = row.cell
     cell_barcode = row.cell[-16:]+'-1'
     index = np.where(current_barcodes[0] == cell_barcode)[0][0]
     cell_type = row.cell_ontology_class
@@ -43,6 +45,7 @@ for index, row in annotations_droplet.iterrows():
     cell_type_values[cell_type].append(values)
     tissue_values[tissue].append(values)
     tissue_cell_types[tissue].append(cell_type)
+    cell_type_ids[cell_type].append(cell_id)
 
 # mapping of cell type name to cell ontology id
 cell_name_to_ontology_id = {}
@@ -89,7 +92,9 @@ for cell_type, values in cell_type_values.items():
     v_matrix = sparse.csc_matrix(v_matrix)
     scipy.io.mmwrite('cell_type_matrices_tm_droplet/{0}.mtx'.format(cell_type), v_matrix)
     subprocess.call(['gzip', 'cell_type_matrices_tm_droplet/{0}.mtx'.format(cell_type)])
-# TODO: save by tissue type as well
+    np.savetxt('cell_type_matrices_tm_droplet/{0}_barcodes.txt'.format(cell_type), np.array(cell_type_ids[cell_type]), fmt='%s')
+
+# save by tissue type as well
 os.makedirs('tissue_cell_type_matrices_tm_droplet', exist_ok=True)
 for tissue, values in tissue_values.items():
     # this is of shape cells x genes
