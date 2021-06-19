@@ -40,6 +40,8 @@ def tuple_gene_overlap_indices(input_gene_names, db_gene_names):
     data_gene_ids = np.array(data_gene_ids)
     return data_gene_ids, db_gene_ids
 
+# TODO: build index with nmslib
+
 def spearman_search(input_data, db_data):
     """
     Search using Spearman correlation. assumes that the input data has already been aligned

@@ -4,12 +4,12 @@
 
 # 1. load data
 # start with droplet data
-import os
+#import os
 import random
 
 import numpy as np
-import scipy.io
-from scipy import sparse
+#import scipy.io
+#from scipy import sparse
 import pickle
 
 """

@@ -20,6 +20,8 @@ GENES_MCA_PATH = os.path.join(PATH, 'data', 'cell_type_genes_mca.h5')
 GENES_MCA_COARSE_PATH = os.path.join(PATH, 'data', 'mca_coarse_gene_names.txt')
 GENES_ALLEN_PATH = os.path.join(PATH, 'data', 'allen_gene_names.txt')
 
+# TODO: build index with NMSlib
+
 DB_TO_PATH = {
         'tm_means': DATA_MEANS_PATH,
         'tm_means_normalized': os.path.join(PATH, 'data', 'cell_type_means_tm_droplet_normalized.h5'),
