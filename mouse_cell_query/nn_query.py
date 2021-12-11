@@ -1,8 +1,8 @@
 # TODO: query by neural network classification?
 # TODO: how to determine the gene set?
 
-from keras.models import Sequential, load_model
-from keras.layers import Dense
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense
 
 import numpy as np
 from scipy import sparse
@@ -42,7 +42,7 @@ def sparse_batch_iterator(data, labels, batch_size=50, shuffle=True):
         if (counter >= n_batches):
             if shuffle:
                 np.random.shuffle(shuffle_index)
-        counter=0
+            counter=0
 
 def sparse_batch_data_iterator(data, batch_size=50, shuffle=True):
     """
@@ -111,16 +111,22 @@ class Classifier(object):
         else:
             self.model.fit(data, labels, epochs=n_epochs)
 
-    def predict(self, data, genes):
+    def predict(self, data, genes, normalize=False):
         """
         Args:
-            data (array): dense array of shape (cells, genes)
+            data (array): dense array or sparse matrix of shape (cells, genes)
             genes: array or list of strings
 
         Returns:
             model prediction for all cells - array of shape (cells, classes) of real values
         """
         # map data gene set onto classifier gene set
+        if data.shape[0] == len(genes):
+            data = data.T
+        if normalize:
+            from uncurl import preprocessing
+            data = preprocessing.cell_normalize(data.T, multiply_means=False)
+            data = preprocessing.log1p(data).T
         genes = list(map(lambda x: x.upper(), genes))
         self_genes = list(map(lambda x: x.upper(), self.genes))
         genes_map = np.zeros(len(self_genes), dtype=int)
@@ -130,15 +136,16 @@ class Classifier(object):
         for i, gene in enumerate(genes):
             if gene in model_gene_index:
                 genes_map[model_gene_index[gene]] = i
-        print(genes_map)
+        print(genes_map, len(genes_map))
         data_new = data[:, genes_map]
         data_new[:, zero_genes] = 0
+        print('data_new.shape:', data_new.shape)
         if sparse.issparse(data_new):
             batch_size = 50
-            iterator = sparse_batch_data_iterator(data, batch_size=batch_size, shuffle=False)
+            iterator = sparse_batch_data_iterator(data_new, batch_size=batch_size, shuffle=False)
             results = self.model.predict_generator(iterator, steps=int(np.ceil(data.shape[0]/batch_size)))
         else:
-            results = self.model.predict(data)
+            results = self.model.predict(data_new)
         return results
 
     def results_to_labels(self, results):
@@ -177,10 +184,10 @@ class Classifier(object):
 
 import os
 PATH = os.path.dirname(__file__)
-DEFAULT_MODEL_PATH = os.path.join(PATH, 'models', 'tm_combined_model_200_200.h5')
+DEFAULT_MODEL_PATH = os.path.join(PATH, 'models', 'tm_combined_classifier.h5')
 LOADED_MODEL = None
 
-def predict_using_default_classifier(data, genes, model_filename=None):
+def predict_using_default_classifier(data, genes, model_filename=None, normalize=False):
     """
     Returns cell type names using a default classifier model.
 
@@ -191,10 +198,11 @@ def predict_using_default_classifier(data, genes, model_filename=None):
     Returns:
         cell_names, cell_probs, cell_name_indices
     """
+    # TODO: match genes
     model_filename = DEFAULT_MODEL_PATH if model_filename is None else model_filename
     global LOADED_MODEL
     LOADED_MODEL = Classifier.load_from_file(model_filename)
-    results = LOADED_MODEL.predict(data, genes)
+    results = LOADED_MODEL.predict(data, genes, normalize=normalize)
     cell_names = LOADED_MODEL.results_to_labels(results)
     return cell_names, results, LOADED_MODEL.class_names
 

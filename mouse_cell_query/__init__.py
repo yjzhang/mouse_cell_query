@@ -65,6 +65,15 @@ def search_db(input_array, input_gene_names, method='spearman', db='tm_means'):
     Returns:
         list of tuples of (cell name, score), sorted by similarity to query
     """
+    if method == 'nn':
+        from .nn_query import predict_using_default_classifier
+        if not db.startswith('tm'):
+            print('Warning: model not present for selected dataset. Using Tabula Muris.')
+        input_array = input_array.reshape((1, len(input_array)))
+        cell_names, results, class_names = predict_using_default_classifier(input_array, input_gene_names, normalize=True)
+        results = results.flatten()
+        inds = results.argsort()[::-1]
+        return [(class_names[i], results[i]) for i in inds]
     gene_names = None
     gene_data = None
     data_dict = dense_matrix_h5.H5Dict(DB_TO_PATH[db])

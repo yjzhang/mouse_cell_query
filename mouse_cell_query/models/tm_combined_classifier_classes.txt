@@ -1,0 +1,100 @@
+B cell
+Bergmann glial cell
+Brush cell of epithelium proper of large intestine
+DN1 thymic pro-T cell
+Fraction A pre-pro B cell
+Kupffer cell
+Langerhans cell
+Slamf1-negative multipotent progenitor cell
+Slamf1-positive multipotent progenitor cell
+T cell
+alveolar macrophage
+astrocyte
+basal cell
+basal cell of epidermis
+basophil
+bladder cell
+bladder urothelial cell
+blood cell
+brain pericyte
+cardiac muscle cell
+ciliated columnar cell of tracheobronchial tree
+classical monocyte
+common lymphoid progenitor
+dendritic cell
+duct epithelial cell
+early pro-B cell
+endocardial cell
+endothelial cell
+endothelial cell of hepatic sinusoid
+enterocyte of epithelium of large intestine
+enteroendocrine cell
+epidermal cell
+epithelial cell
+epithelial cell of large intestine
+epithelial cell of lung
+epithelial cell of proximal tubule
+erythroblast
+erythrocyte
+fibroblast
+granulocyte
+granulocyte monocyte progenitor cell
+granulocytopoietic cell
+hematopoietic precursor cell
+hepatocyte
+immature B cell
+immature NK T cell
+immature T cell
+immature natural killer cell
+keratinocyte
+keratinocyte stem cell
+kidney capillary endothelial cell
+kidney cell
+kidney collecting duct epithelial cell
+kidney loop of Henle ascending limb epithelial cell
+kidney proximal straight tubule epithelial cell
+large intestine goblet cell
+late pro-B cell
+leukocyte
+luminal epithelial cell of mammary gland
+lung endothelial cell
+lymphocyte
+macrophage
+mast cell
+mature natural killer cell
+megakaryocyte-erythroid progenitor cell
+mesangial cell
+mesenchymal cell
+mesenchymal stem cell
+mesenchymal stem cell of adipose
+microglial cell
+monocyte
+myeloid cell
+myofibroblast cell
+naive B cell
+nan
+natural killer cell
+neuroendocrine cell
+neuron
+non-classical monocyte
+oligodendrocyte
+oligodendrocyte precursor cell
+pancreatic A cell
+pancreatic D cell
+pancreatic PP cell
+pancreatic acinar cell
+pancreatic ductal cell
+pancreatic stellate cell
+pre-natural killer cell
+precursor B cell
+proerythroblast
+professional antigen presenting cell
+promonocyte
+regulatory T cell
+skeletal muscle satellite cell
+skeletal muscle satellite stem cell
+smooth muscle cell
+stem cell of epidermis
+stromal cell
+type B pancreatic cell
+type II pneumocyte
