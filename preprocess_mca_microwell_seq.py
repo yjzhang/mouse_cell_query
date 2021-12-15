@@ -207,19 +207,19 @@ for cell_index, row in annotations.iterrows():
         gc.collect()
     cell_barcode = row['Cell.Barcode']
     cell_type = row['Annotation']
-    #try:
-    #    index = np.where(current_barcodes == cell_barcode)[0][0]
-    #except:
-    #    print('Cell ID not found:', batch, cell_index, cell_barcode, cell_type)
-    #    continue
+    try:
+        index = np.where(current_barcodes == cell_barcode)[0][0]
+    except:
+        print('Cell ID not found:', batch, cell_index, cell_barcode, cell_type)
+        continue
     cell_type = cell_type.replace('/', '-')
-    #if cell_type not in cell_type_values:
-    #    cell_type_values[cell_type] = []
-    #cell_type_values[cell_type].append(current_matrix[:, index])
+    if cell_type not in cell_type_values:
+        cell_type_values[cell_type] = []
+    cell_type_values[cell_type].append(current_matrix[:, index])
     if cell_type not in cell_type_ids:
         cell_type_ids[cell_type] = []
     cell_type_ids[cell_type].append(row['Cell.name'])
-    print(cell_index, cell_barcode, cell_type)
+    #print(cell_index, cell_barcode, cell_type)
     prev_cell_type = cell_type
 
 
@@ -235,7 +235,6 @@ for cell_type, values in cell_type_values.items():
 
 np.savetxt('genes_mca.txt', unified_gene_list, fmt='%s')
 
-"""
 import pickle
 with open('cell_type_values_mca_dict.pkl', 'wb') as f:
     pickle.dump(cell_type_values, f)
@@ -245,7 +244,7 @@ from uncurl_analysis import dense_matrix_h5
 cell_type_means = {}
 for cell_type, values in cell_type_values.items():
     print(cell_type)
-    v_matrix = np.hstack(values)
+    v_matrix = sparse.hstack(values)
     values_mean = v_matrix.mean(1)
     cell_type_means[cell_type] = np.array(values_mean).flatten()
 dense_matrix_h5.store_dict('cell_type_means_mca.h5', cell_type_means)
@@ -253,24 +252,10 @@ dense_matrix_h5.store_dict('cell_type_means_mca.h5', cell_type_means)
 # calculate cell type medians
 cell_type_medians = {}
 for cell_type, values in cell_type_values.items():
-    v_matrix = np.hstack(values).T.toarray()
+    v_matrix = sparse.hstack(values).T.toarray()
     # do a median calculation here
     cell_type_medians[cell_type] = np.median(v_matrix, 0)
-
-# dump as pickle
-
-# convert to h5 using pytables
 dense_matrix_h5.store_dict('cell_type_medians_mca.h5', cell_type_medians)
-
-# save the whole matrix of cell_type_values.
-os.makedirs('cell_type_matrices_mca', exist_ok=True)
-for cell_type, values in cell_type_values.items():
-    # this is of shape cells x genes
-    v_matrix = sparse.hstack(values).T
-    v_matrix = sparse.csc_matrix(v_matrix)
-    scipy.io.mmwrite('cell_type_matrices_mca/{0}.mtx'.format(cell_type), v_matrix)
-    subprocess.call(['gzip', 'cell_type_matrices_mca/{0}.mtx'.format(cell_type)])
-"""
 
 # TODO: unify gene names across datasets (again)
 unified_gene_list = np.loadtxt('genes_mca.txt', dtype=str)

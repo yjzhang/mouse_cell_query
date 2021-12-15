@@ -1,5 +1,6 @@
 # loads the processed mca data, combines the same cell types from different tissues?
 
+import gc
 import os
 
 import numpy as np
@@ -8,7 +9,7 @@ from scipy import sparse
 
 
 # TODO: load cell types from folder
-base_path = 'mca_microwell_seq/cell_type_matrices_mca'
+base_path = 'cell_type_matrices_mca'
 cell_types = []
 for filename in os.listdir(base_path):
     if filename.endswith('.mtx.gz'):
@@ -40,18 +41,22 @@ for cell_type in cell_types:
         cell_type_classes_coarse.add(x)
     cell_type_classes_map_coarse[cell_type] = x
 
-
-base_dir = 'mca_microwell_seq/cell_type_matrices_mca'
+base_dir = 'cell_type_matrices_mca'
 new_cell_types_dict = {x: [] for x in cell_type_classes_coarse}
-for filename in os.listdir(base_dir):
-    data = sparse.csc_matrix(scipy.io.mmread(os.path.join(base_dir, filename)).T)
-    cell_type = filename.split('.')[0]
-    coarse_cell_type = cell_type_classes_map_coarse[cell_type]
-    print(cell_type, coarse_cell_type)
-    new_cell_types_dict[coarse_cell_type].append(data)
+for coarse_cell_type in cell_type_classes_coarse:
+    print('Processing: ', coarse_cell_type)
+    for filename in os.listdir(base_dir):
+        if filename.endswith('.mtx.gz'):
+            cell_type = filename.split('.')[0]
+            if cell_type_classes_map_coarse[cell_type] == coarse_cell_type:
+                data = sparse.csc_matrix(scipy.io.mmread(os.path.join(base_dir, filename)).T)
+                print(cell_type, ' => ', coarse_cell_type)
+                new_cell_types_dict[coarse_cell_type].append(data)
+                gc.collect()
+    new_cell_types_dict[coarse_cell_type] = sparse.vstack(
+            new_cell_types_dict[coarse_cell_type])
 
 # calculate means
-new_cell_types_dict = {k : sparse.hstack(v) for k, v in new_cell_types_dict.items()}
 normalize = False
 if normalize:
     new_cell_types_dict = {k : v/v.sum(1) for k, v in new_cell_types_dict.items()}
@@ -65,4 +70,3 @@ for cell_type, v_matrix in new_cell_types_dict.items():
     # this is of shape cells x genes
     scipy.io.mmwrite('cell_type_matrices_mca_coarse/{0}.mtx'.format(cell_type), v_matrix)
     subprocess.call(['gzip', 'cell_type_matrices_mca_coarse/{0}.mtx'.format(cell_type)])
-
