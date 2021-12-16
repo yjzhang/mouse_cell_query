@@ -12,6 +12,10 @@ DATA_DIR = '../'
 TM_DROPLET_PATH = os.path.join(DATA_DIR, 'tabula_muris/cell_type_matrices_tm_droplet')
 TM_FACS_PATH = os.path.join(DATA_DIR, 'tabula_muris/cell_type_matrices_tm_facs')
 TM_GENES_PATH = os.path.join(DATA_DIR, 'mouse_cell_query/data/gene_names.txt')
+MCA_PATH = os.path.join(DATA_DIR, 'cell_type_matrices_mca_coarse')
+MCA_GENES_PATH = os.path.join(DATA_DIR, 'mca_microwell_seq/genes_mca.txt')
+
+# TODO: map cell type names together using that one table
 
 
 def load_data(paths, genes_path, genes_subset_path=None, normalize=True, log=True):

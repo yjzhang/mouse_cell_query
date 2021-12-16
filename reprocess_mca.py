@@ -41,8 +41,12 @@ for cell_type in cell_types:
         cell_type_classes_coarse.add(x)
     cell_type_classes_map_coarse[cell_type] = x
 
+print(cell_type_classes_coarse)
+
+import subprocess
 base_dir = 'cell_type_matrices_mca'
 new_cell_types_dict = {x: [] for x in cell_type_classes_coarse}
+os.makedirs('cell_type_matrices_mca_coarse', exist_ok=True)
 for coarse_cell_type in cell_type_classes_coarse:
     print('Processing: ', coarse_cell_type)
     for filename in os.listdir(base_dir):
@@ -53,20 +57,20 @@ for coarse_cell_type in cell_type_classes_coarse:
                 print(cell_type, ' => ', coarse_cell_type)
                 new_cell_types_dict[coarse_cell_type].append(data)
                 gc.collect()
-    new_cell_types_dict[coarse_cell_type] = sparse.vstack(
-            new_cell_types_dict[coarse_cell_type])
+    v_matrix = sparse.vstack(new_cell_types_dict[coarse_cell_type])
+    del new_cell_types_dict[coarse_cell_type]
+    #new_cell_types_dict[coarse_cell_type] = v_matrix
+    gc.collect()
+    scipy.io.mmwrite('cell_type_matrices_mca_coarse/{0}.mtx'.format(coarse_cell_type), v_matrix)
+    subprocess.call(['gzip', 'cell_type_matrices_mca_coarse/{0}.mtx'.format(coarse_cell_type)])
+
+print('done processing')
 
 # calculate means
-normalize = False
-if normalize:
-    new_cell_types_dict = {k : v/v.sum(1) for k, v in new_cell_types_dict.items()}
-new_cell_types_means = {k : np.array(v.mean(1)).flatten() for k, v in new_cell_types_dict.items()}
+#normalize = False
+#if normalize:
+#    new_cell_types_dict = {k : v/v.sum(1) for k, v in new_cell_types_dict.items()}
+#new_cell_types_means = {k : np.array(v.mean(1)).flatten() for k, v in new_cell_types_dict.items()}
 
 #dense_matrix_h5.store_dict('cell_type_means_mca_coarse_normalized.h5', new_cell_types_means)
 
-import subprocess
-os.makedirs('cell_type_matrices_mca_coarse', exist_ok=True)
-for cell_type, v_matrix in new_cell_types_dict.items():
-    # this is of shape cells x genes
-    scipy.io.mmwrite('cell_type_matrices_mca_coarse/{0}.mtx'.format(cell_type), v_matrix)
-    subprocess.call(['gzip', 'cell_type_matrices_mca_coarse/{0}.mtx'.format(cell_type)])
